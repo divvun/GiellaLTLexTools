@@ -1,0 +1,44 @@
+[project]
+name = "GiellaLTLexTools"
+version = "0.1.0"
+description = "Test and process lexicon data for giellalt projects"
+authors = ["Flammie A Pirinen <flammie@iki.fi>"]
+readme = "README.md"
+requires-python = ">=3.9"
+
+[tool.poetry.dependencies]
+hfst = "*"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.4"
+mypy = "^1.8.0"
+pytest = "^8.3.2"
+
+[tool.poetry.scripts]
+gtlemmatest="generate-lemmas:main"
+gtparadigmtest="generate-paradigms:main"
+gtacceptlemmas="accept-all-lemmas:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "F", #Pyflakes
+    "B", #flake8-bugbear
+    "A", #flake8-builtins 
+    "C4", #flake8-comprehensions
+    "ERA", #eradicate
+    "I", #isort
+    "PT", #flake8-pytest-style
+    "C90", #mccabe
+    "N", #pep8-naming
+    "E", #pycodestyle error
+    "PL" #Pylint
+]
+ignore = ["A003"]
