@@ -1,27 +1,27 @@
 [project]
-name = "GiellaLTLexTools"
+name = "giellaltlextools"
 version = "0.1.0"
 description = "Test and process lexicon data for giellalt projects"
-authors = ["Flammie A Pirinen <flammie@iki.fi>"]
+authors = [{name="Flammie A Pirinen", email="flammie@iki.fi"}]
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "hfst>=3.12.2.4b0",
+]
+license = "GPL-3.0"
 
-[tool.poetry.dependencies]
-hfst = "*"
+[project.urls]
+homepage = "https://divvun.github.io/giellaltlextools"
+repository = "https://github.com/divvun/giellaltlextools"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.6.4"
-mypy = "^1.8.0"
-pytest = "^8.3.2"
-
-[tool.poetry.scripts]
-gtlemmatest="generate-lemmas:main"
-gtparadigmtest="generate-paradigms:main"
-gtacceptlemmas="accept-all-lemmas:main"
+[project.scripts]
+gtlemmatest = "giellaltlextools.gtlemmatest:main"
+gtparadigmtest = "giellaltlextools.gtparadigmtest:main"
+gtspelltest = "giellaltlextools.gtspelltest:main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 79
