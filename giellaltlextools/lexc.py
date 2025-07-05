@@ -53,7 +53,7 @@ def unhidelexcescapes(s: str, unescape=True) -> str:
 def killflagdiacritics(s: str) -> str:
     """Remove flag diacritics from the string."""
     if "@" in s:
-        s = re.sub("@[CRDPN].[^@]*@", "", s)
+        s = re.sub("@[CRDPNU].[^@]*@", "", s)
     return s
 
 def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
