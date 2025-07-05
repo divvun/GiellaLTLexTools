@@ -51,8 +51,9 @@ def main():
     lemmas = set()
     for lexcfilename in options.lexcfilenames:
         with open(lexcfilename, encoding="utf-8") as lexcfile:
-            lemmas.add(scrapelemmas(lexcfile, options.exclusions,
-                                    options.debug))
+            more = scrapelemmas(lexcfile, options.exclude, options.debug)
+            for lemma in more:
+                lemmas.add(lemma)
     lines = 0
     oovs = 0
     if options.verbose:

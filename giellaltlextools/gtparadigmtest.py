@@ -43,7 +43,7 @@ def main():
     if options.acceptable_forms:
         skipforms = [l.strip() for l in options.acceptable_forms.readlines()]
     skiptags = options.acceptable_tags
-    lemmas = scrapelemmas(options.lexcfile, options.exclude, options.debug)
+    lemmas = scrapelemmas(options.lexcfile, None, options.debug)
     lines = 0
     forms = 0
     oovs = 0

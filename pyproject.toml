@@ -5,23 +5,20 @@ description = "Test and process lexicon data for giellalt projects"
 authors = [{name="Flammie A Pirinen", email="flammie@iki.fi"}]
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-    "hfst>=3.12.2.4b0",
-]
 license = "GPL-3.0"
 
 [project.urls]
 homepage = "https://divvun.github.io/giellaltlextools"
 repository = "https://github.com/divvun/giellaltlextools"
 
-[project.scripts]
+[tool.poetry.scripts]
 gtlemmatest = "giellaltlextools.gtlemmatest:main"
 gtparadigmtest = "giellaltlextools.gtparadigmtest:main"
 gtspelltest = "giellaltlextools.gtspelltest:main"
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 79
@@ -42,3 +39,6 @@ select = [
     "PL" #Pylint
 ]
 ignore = ["A003"]
+
+[tool.poetry.dependencies]
+pyhfst = "^1.3.0"

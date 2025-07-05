@@ -55,8 +55,7 @@ def main():
             continue
         failed = True
         for tagstring in options.tags:
-            generations = generator.lookup(lemma + tagstring,
-                                           time_cutoff=0.1)
+            generations = generator.lookup(lemma + tagstring)
             if len(generations) == 0:
                 if options.verbose:
                     print(f"{lemma}{tagstring} does not generate!")
@@ -69,8 +68,7 @@ def main():
             oovs += 1
             for tagstring in options.tags:
                 print(f"{lemma}{tagstring}", file=logfile)
-            analyses = analyser.lookup(lemma,
-                                       time_cutoff=0.1)
+            analyses = analyser.lookup(lemma)
             if len(analyses) > 0:
                 print(f"\tN.B: {lemma} has following analyses", file=logfile)
                 for analysis in analyses:

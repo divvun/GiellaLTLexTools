@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """Functions for handling HFST stuff."""
 
-import hfst
+import pyhfst
 
 
-def load_hfst(filename: str) -> hfst.HfstTransducer:
+def load_hfst(filename: str) -> pyhfst.Transducer:
     """Load HFST automaton from a named file."""
-    try:
-        his = hfst.HfstInputStream(filename)
-        return his.read()
-    except hfst.exceptions.NotTransducerStreamException:
-        raise IOError(2, filename) from None
+    his = pyhfst.HfstInputStream(filename)
+    return his.read()
 
 
 if __name__ == "__main__":
