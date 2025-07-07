@@ -15,14 +15,14 @@ def hidelexcescapes(s: str) -> str:
     This function is designed to process a line or a block of lexc data
     including a single lexeme entry. But it'll work for any lexc snippet
     usually."""
-    s = s.replace("%!", "@EXCLAMATIONMARK@")
-    s = s.replace("%:", "@COLON@")
-    s = s.replace("%<", "@LESSTHAN@")
-    s = s.replace("% ", "@SPACE@")
+    s = s.replace("%!", "§EXCLAMATIONMARK§")
+    s = s.replace("%:", "§COLON§")
+    s = s.replace("%<", "§LESSTHAN§")
+    s = s.replace("% ", "§SPACE§")
     if "<" in s and ">" in s:
-        s = re.sub("<.*>", "@REGEX@", s)
+        s = re.sub("<.*>", "§REGEX§", s)
     if "\"" in s:
-        s = s.replace("%\"", "@QUOTATIONMARK@")
+        s = s.replace("%\"", "§QUOTATIONMARK§")
         if "\"" in s:
             # archaic translation comment
             s = re.sub("\".*\"", "", s)
@@ -36,17 +36,17 @@ def unhidelexcescapes(s: str, unescape=True) -> str:
     actual surface form.
     """
     if unescape:
-        s = s.replace("@EXCLAMATIONMARK@", "!")
-        s = s.replace("@COLON@", ":")
-        s = s.replace("@LESSTHAN@", "<")
-        s = s.replace("@SPACE@", " ")
-        s = s.replace("@QUOTATIONMARK@", "\"")
+        s = s.replace("§EXCLAMATIONMARK§", "!")
+        s = s.replace("§COLON§", ":")
+        s = s.replace("§LESSTHAN§", "<")
+        s = s.replace("§SPACE§", " ")
+        s = s.replace("§QUOTATIONMARK§", "\"")
     else:
-        s = s.replace("@EXCLAMATIONMARK@", "%!")
-        s = s.replace("@COLON@", ":")
-        s = s.replace("@LESSTHAN@", "<")
-        s = s.replace("@SPACE@", " ")
-        s = s.replace("@QUOTATIONMARK@", "%\"")
+        s = s.replace("§EXCLAMATIONMARK§", "%!")
+        s = s.replace("§COLON§", ":")
+        s = s.replace("§LESSTHAN§", "<")
+        s = s.replace("§SPACE§", " ")
+        s = s.replace("§QUOTATIONMARK§", "%\"")
     return s
 
 
