@@ -1,15 +1,12 @@
-[project]
+[tool.poetry]
 name = "giellaltlextools"
 version = "0.1.0"
 description = "Test and process lexicon data for giellalt projects"
-authors = [{name="Flammie A Pirinen", email="flammie@iki.fi"}]
+authors = ["Flammie A Pirinen <flammie@iki.fi>"]
 readme = "README.md"
-requires-python = ">=3.9"
-license = "GPL-3.0"
-
-[project.urls]
 homepage = "https://divvun.github.io/giellaltlextools"
 repository = "https://github.com/divvun/giellaltlextools"
+license = "GPL-3.0"
 
 [tool.poetry.scripts]
 gtlemmatest = "giellaltlextools.gtlemmatest:main"
