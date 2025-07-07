@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "giellaltlextools"
-version = "0.1.0"
+version = "0.2.0"
 description = "Test and process lexicon data for giellalt projects"
 authors = ["Flammie A Pirinen <flammie@iki.fi>"]
 readme = "README.md"
