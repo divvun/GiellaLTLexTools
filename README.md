@@ -5,15 +5,26 @@ scripts.
 
 ## Dependencies
 
-Uses [pyhfst]() to load HFST automata. You can install pyhfst with [pip]().
+Uses [pyhfst](https://github.com/Rootroo-ltd/pyhfst) to load HFST automata. Run `poetry install` to install dependencies.
 Spell-checker testing uses
 [divvunspell](https://github.com/divvun/divvunspell) binaries. You can install
-divvunspell with [cargo]().
+divvunspell with [cargo](https://www.rust-lang.org/tools/install).
 
 ## Installation
 
-You can install giellaltlextools with [pipx](): `pipx install
+You can install giellaltlextools with [pipx](https://pipx.pypa.io): `pipx install
 git+https://github.com/divvun/giellaltlextools`.
+
+## Technical Details
+
+This project uses Poetry's build system to ensure optimal pyhfst installation.
+The project is configured to automatically optimize `pyhfst` installation with Cython for better performance:
+
+- **Build System**: Declares Cython as a build-time requirement
+- **Build Script**: `scripts/build.py` automatically handles pyhfst optimization
+- **Dependencies**: Cython is included as both a runtime and build dependency
+
+The build script runs automatically during `poetry install` and `poetry build`, ensuring pyhfst is always installed with Cython support when available.
 
 ## Usage
 
@@ -26,7 +37,6 @@ There are currently three programs installed:
 - `gtparadigmteset` for testing that a generator generates full paradigms of the
   lemmas
 - `gtspelltest` for testing that a spell checker accepts lemmas from lexc files.
-
 
 ### Lemma testing
 
