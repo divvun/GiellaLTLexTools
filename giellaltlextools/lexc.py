@@ -19,6 +19,7 @@ def hidelexcescapes(s: str) -> str:
     s = s.replace("%:", "§COLON§")
     s = s.replace("%<", "§LESSTHAN§")
     s = s.replace("% ", "§SPACE§")
+    s = s.replace("%0", "§ZERO§")
     if "<" in s and ">" in s:
         s = re.sub("<.*>", "§REGEX§", s)
     if "\"" in s:
@@ -41,12 +42,14 @@ def unhidelexcescapes(s: str, unescape=True) -> str:
         s = s.replace("§LESSTHAN§", "<")
         s = s.replace("§SPACE§", " ")
         s = s.replace("§QUOTATIONMARK§", "\"")
+        s = s.replace("§ZERO§", "0")
     else:
         s = s.replace("§EXCLAMATIONMARK§", "%!")
         s = s.replace("§COLON§", ":")
         s = s.replace("§LESSTHAN§", "<")
         s = s.replace("§SPACE§", " ")
         s = s.replace("§QUOTATIONMARK§", "%\"")
+        s = s.replace("§ZERO§", "%0")
     return s
 
 
