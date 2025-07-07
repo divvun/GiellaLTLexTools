@@ -4,6 +4,7 @@
 import sys
 import tempfile
 from argparse import ArgumentParser
+from time import time
 
 from .hfst import load_hfst
 from .lexc import scrapelemmas
@@ -28,6 +29,10 @@ def main():
                       help="prints debugging outputs")
     argp.add_argument("-v", "--verbose", action="store_true", default=False,
                       help="prints some outputs")
+    argp.add_argument("-B", "--time-out", type=int, default=60,
+                      help="max time spend on lemmas")
+    argp.add_argument("-Q", "--oov-limit", type=int, default=10_000,
+                      help="stop trying after so many oovs")
     argp.add_argument("-X", "--acceptable-tags", action="append",
                       help="do not count oov if analyses contain these tags")
     argp.add_argument("-Z", "--acceptable-forms", type=open,
@@ -47,6 +52,7 @@ def main():
     lines = 0
     forms = 0
     oovs = 0
+    start = time()
     for lemma in lemmas:
         for paradigm in paradigms:
             generations = generator.lookup(lemma + paradigm)
@@ -65,12 +71,20 @@ def main():
                         print(f"{lemma}{paradigm} does not generate!")
                     print(f"{lemma}{paradigm}", file=logfile)
                     oovs += 1
+                    if oovs >= options.oov_limit:
+                        print(f"FAILing fast after too many fails: {oovs}")
+                        print(f"see {logfile.name} for details")
+                        sys.exit(1)
             lines += 1
             forms += len(generations)
             if options.debug:
                 print(f"{lemma}{paradigm}:")
                 for g in generations:
                     print(f"\t{g}")
+        now = time()
+        if now - start > options.time_out:
+            print(f"Bailing after timeout {now - start}")
+            break
     if lines == 0:
         print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
         sys.exit(77)

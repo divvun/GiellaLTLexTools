@@ -33,6 +33,8 @@ def main():
                       help="exclude lines matching regex")
     argp.add_argument("-Q", "--oov-limit", type=int, default=100_000,
                       help="stop trying after so many oovs")
+    argp.add_argument("-B", "--time-out", type=int, default=60,
+                      help="max time used to test lemmas")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="lemmaspell", suffix=".txt",
                                           delete=False, encoding="UTF-8",
@@ -63,13 +65,13 @@ def main():
         results = subprocess.run(spellargs, input=lemmabytes,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
-                                 check=True, timeout=60)
+                                 check=True, timeout=options.time_out)
     except subprocess.TimeoutExpired:
         print("Warning: lemma checking timed out")
         sys.exit(77)
     skipping = True
     if options.verbose:
-        print(f"processing done.")
+        print("processing done.")
     for line in results.stdout.decode("utf-8").strip().split("\n"):
         if "Input:" in line:
             lemma = line.split()[1]

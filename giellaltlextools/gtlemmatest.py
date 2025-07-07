@@ -5,6 +5,7 @@ import re
 import sys
 import tempfile
 from argparse import ArgumentParser
+from time import time
 
 from .hfst import load_hfst
 from .lexc import scrapelemmas
@@ -38,6 +39,8 @@ def main():
                       help="exclude lines matching regex")
     argp.add_argument("-Q", "--oov-limit", type=int, default=1000,
                       help="stop trying after so many oovs")
+    argp.add_argument("-B", "--time-out", type=int, default=60,
+                      help="max time to use with lemmas")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
                                           delete=False, encoding="UTF-8",
@@ -50,6 +53,7 @@ def main():
     lemmas = scrapelemmas(options.lexcfile, options.exclude, options.debug)
     lines = 0
     oovs = 0
+    start = time()
     for lemma in lemmas:
         if lemma in {"", "#", "#;"}:
             continue
@@ -76,6 +80,10 @@ def main():
             if oovs >= options.oov_limit:
                 print("too many fails, bailing to save time...")
                 break
+        now = time()
+        if now - start > options.time_out:
+            print(f"bailing after timeout: {now - start}")
+            break
     if lines == 0:
         print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
         sys.exit(77)
