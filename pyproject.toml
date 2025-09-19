@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "giellaltlextools"
-version = "0.2.0"
+version = "0.3.0"
 description = "Test and process lexicon data for giellalt projects"
 authors = ["Flammie A Pirinen <flammie@iki.fi>"]
 readme = "README.md"
@@ -12,6 +12,7 @@ license = "GPL-3.0"
 gtlemmatest = "giellaltlextools.gtlemmatest:main"
 gtparadigmtest = "giellaltlextools.gtparadigmtest:main"
 gtspelltest = "giellaltlextools.gtspelltest:main"
+gtmultichartest = "giellaltlextools.gtmultichartest:main"
 
 [build-system]
 requires = ["poetry-core", "cython>=3.0.0"]
