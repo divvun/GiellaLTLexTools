@@ -56,6 +56,8 @@ def main():
                 declaredmultichars.add(multichar)
         elif not inmultichars and inlexicons:
             if ";" in line:
+                # for some reason split is confused by tabs and spaces mixed
+                line = line.replace("\t", "    ")
                 if "!" in line:
                     line = line.replace("%!", "§EXCLAMATION§")
                     line = line.split("!")[0]
