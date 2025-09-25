@@ -30,6 +30,8 @@ def main():
             if line.startswith("Multichar_Symbols"):
                 inmultichars = True
                 rest = line[len("Multichar_Symbols") + 1:].strip()
+                if "!" in rest:
+                    rest = rest.split("!")[0].strip()
                 if rest != "":
                     print(f"trailing rubbish after multichar syms: {rest}")
                     failcount += 1
@@ -90,8 +92,12 @@ def main():
                         if i >= 2:
                             pairstring = fields[i-2]
                         if i >= 3:
-                            print(f"too many spaces? parsing:\n{line}")
-                            failcount += 1
+                            if line.startswith("LEXICON "):
+                                print("entries on LEXICON line is not "
+                                      f"supported:\n{line}")
+                            else:
+                                print(f"too many spaces? parsing:\n{line}")
+                                failcount += 1
                 if pairstring:
                     if ":" in pairstring:
                         deep = pairstring.split(":")[0]
