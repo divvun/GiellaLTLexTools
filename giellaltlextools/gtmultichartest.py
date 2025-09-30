@@ -24,6 +24,12 @@ def main():
     failcount = 0
     declaredmultichars = set()
     lines = 0
+    plussuffixtags = False
+    plussuffixtagre = r"\+[A-Za-z0-9_-][^+@#]*"
+    prefixplustags = False
+    prefixplustagre = r"[^+@#]*[A-Za-z0-9_-]\+"
+    atflagattags = False
+    atflagatre = r"@[^@]+@"
     for line in options.lexcfile:
         lines += 1
         if not inmultichars and not inlexicons:
@@ -54,6 +60,12 @@ def main():
             for multichar in line.split():
                 multichar = multichar.replace("§SPACE§", "% ")
                 declaredmultichars.add(multichar)
+                if multichar.startswith("+"):
+                    plussuffixtags = True
+                if multichar.endswith("+"):
+                    prefixplustags = True
+                if multichar.startswith("@") and multichar.endswith("@"):
+                    atflagattags = True
         elif not inmultichars and inlexicons:
             if ";" in line:
                 # for some reason split is confused by tabs and spaces mixed
@@ -62,12 +74,6 @@ def main():
                     line = line.replace("%!", "§EXCLAMATION§")
                     line = line.split("!")[0]
                     line = line.replace("§EXCLAMATION§", "%!")
-                line = line.replace("%;", "§SEMICOLON§")
-                if line.count(";") > 1:
-                    print(f"too many semicolons on line {lines}:\n{line}")
-                    failcount += 1
-                    continue
-                line = line.replace("§SEMICOLON§", "%;")
                 if "\"" in line:
                     line = line.replace("%\"", "§QUOTATION§")
                     line = re.sub(" \"[^\"]*\"", "", line)
@@ -83,6 +89,12 @@ def main():
                     if ">" in line:
                         line = re.sub("^[^>]*>", "§REGEXFAIL", line)
                     line = line.replace("§MORETHAN§", "%>")
+                line = line.replace("%;", "§SEMICOLON§")
+                if line.count(";") > 1:
+                    print(f"too many semicolons on line {lines}:\n{line}")
+                    failcount += 1
+                    continue
+                line = line.replace("§SEMICOLON§", "%;")
                 if "% " in line:
                     line = line.replace("% ", "§SPACE§")
                 pairstring = None
@@ -105,14 +117,49 @@ def main():
                         deep = pairstring.split(":")[0]
                     else:
                         deep = pairstring
-                    tagre = r"\+[A-Za-z0-9_-][^+@#]*"
-                    for tag in re.findall(tagre, deep):
+                    sussufix = []
+                    susprefix = []
+                    for tag in re.findall(plussuffixtagre, deep):
                         if tag not in declaredmultichars:
                             if not tag[-1].isalpha() and \
                                     tag[:-1] in declaredmultichars:
                                 continue
-                            print(f"{tag} seems like a multichar but is missing"
-                                  " from the Multichar_Symbols section "
+                            sussufix.append([tag])
+                    for tag in re.findall(prefixplustagre, deep):
+                        if tag not in declaredmultichars:
+                            susprefix.append([tag])
+                    if sussufix and plussuffixtags:
+                        if not prefixplustags:
+                            print(f"{sussufix} seem(s) like a multichar "
+                                  "suffix tag but is missing from the "
+                                  "Multichar_Symbols section "
+                                  f"on line {lines}:\n{line}")
+                            failcount += 1
+                        elif susprefix:
+                            print(f"{sussufix} or {susprefix} seem like "
+                                  "potential multichars (suffixes or prefixes?)"
+                                  " but are missing from "
+                                  "Multichar_Symbols section "
+                                  f"on line {lines}:\n{line}")
+                            failcount += 1
+                    elif susprefix and prefixplustags:
+                        if not plussuffixtags:
+                            print(f"{susprefix} seem(s) like a multichar "
+                                  "prefix tag but is missing from the "
+                                  "Multichar_Symbols section "
+                                  f"on line {lines}:\n{line}")
+                            failcount += 1
+                        elif sussufix:
+                            print(f"{susprefix} seem(s) like a multichar "
+                                  "prefix tag but is missing from the "
+                                  "Multichar_Symbols section "
+                                  f"on line {lines}:\n{line}")
+                            failcount += 1
+                    for flag in re.findall(atflagatre, deep):
+                        if flag not in declaredmultichars:
+                            print(f"{flag} seems like a multichar "
+                                  "flag diacritic but is missing from the "
+                                  "Multichar_Symbols section "
                                   f"on line {lines}:\n{line}")
                             failcount += 1
                 if len(fields) <= 2:
