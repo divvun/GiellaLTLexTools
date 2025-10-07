@@ -54,6 +54,7 @@ def main():
     lines = 0
     oovs = 0
     start = time()
+    timedout = False
     for lemma in lemmas:
         if lemma in {"", "#", "#;"}:
             continue
@@ -83,6 +84,7 @@ def main():
         now = time()
         if now - start > options.time_out:
             print(f"bailing after timeout: {now - start}")
+            timedout = True
             break
     if lines == 0:
         print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
@@ -95,6 +97,10 @@ def main():
     if coverage < options.threshold:
         print("FAIL: too many lemmas weren't generating!",
               f"{coverage} < {options.threshold}")
+        print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        sys.exit(1)
+    elif timedout and oovs > 0:
+        print("FAIL: timed out with ungenerated lemmas")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
         sys.exit(1)
 
