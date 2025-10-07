@@ -103,6 +103,9 @@ def main():
         print("FAIL: timed out with ungenerated lemmas")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
         sys.exit(1)
+    elif timedout:
+        print("SKIP: timed out but didn't find  problems")
+        sys.exit(77)
 
 
 if __name__ == "__main__":

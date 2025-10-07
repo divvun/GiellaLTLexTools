@@ -53,6 +53,7 @@ def main():
     forms = 0
     oovs = 0
     start = time()
+    timedout = False
     for lemma in lemmas:
         for paradigm in paradigms:
             generations = generator.lookup(lemma + paradigm)
@@ -84,6 +85,7 @@ def main():
         now = time()
         if now - start > options.time_out:
             print(f"Bailing after timeout {now - start}")
+            timedout = True
             break
     if lines == 0:
         print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
@@ -99,6 +101,13 @@ def main():
               f"{coverage} < {options.threshold}")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
         sys.exit(1)
+    elif timedout and oovs:
+        print("FAIL: timed out and failures...")
+        print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        sys.exit(1)
+    elif timedout:
+        print("SKIP: timed out but found no errors")
+        sys.exit(77)
 
 
 if __name__ == "__main__":
