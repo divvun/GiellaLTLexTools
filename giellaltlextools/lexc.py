@@ -86,7 +86,7 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
         # see stuff
         if lexcline.startswith("LEXICON "):
             continue
-        elif not lexcline or lexcline == "":
+        if not lexcline or lexcline == "":
             continue
         if ";" not in lexcline:
             continue
@@ -97,12 +97,16 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
         if ":" in lexcline:
             analysis = unhidelexcescapes(lexcline.split(":")[0])
             lemma = analysis.split("+")[0]
+            if not lemma or lemma.strip() == "":
+                continue
             if debug:
                 print(lemma)
             lemmas.add(lemma)
         else:
             idstringy = unhidelexcescapes(lexcline.split()[0])
             lemma = idstringy.split("+")[0]
+            if not lemma or lemma.strip() == "":
+                continue
             if debug:
                 print(lemma)
             lemmas.add(lemma)
