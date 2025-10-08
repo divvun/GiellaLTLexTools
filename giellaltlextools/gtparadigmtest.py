@@ -4,6 +4,7 @@
 import sys
 import tempfile
 from argparse import ArgumentParser
+from subprocess import Popen
 from time import time
 
 from .hfst import load_hfst
@@ -37,6 +38,8 @@ def main():
                       help="do not count oov if analyses contain these tags")
     argp.add_argument("-Z", "--acceptable-forms", type=open,
                       help="do not count oov if analysis contained in file")
+    argp.add_argument("-E", "--editor", type=str,
+                      help="open failures in EDITOR afterwards")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
                                           delete=False, encoding="UTF-8",
@@ -74,7 +77,11 @@ def main():
                     oovs += 1
                     if oovs >= options.oov_limit:
                         print(f"FAILing fast after too many fails: {oovs}")
+                        print("\nFINISHED PREMATURELY TOO MANY FAILS: ",
+                              oovs, file=logfile)
                         print(f"see {logfile.name} for details")
+                        if options.editor:
+                            Popen([options.editor, logfile.name])
                         sys.exit(1)
             lines += 1
             forms += len(generations)
@@ -100,10 +107,14 @@ def main():
         print("FAIL: too many lemmas weren't generating!",
               f"{coverage} < {options.threshold}")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        if options.editor:
+            Popen([options.editor, logfile.name])
         sys.exit(1)
     elif timedout and oovs:
         print("FAIL: timed out and failures...")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        if options.editor:
+            Popen([options.editor, logfile.name])
         sys.exit(1)
     elif timedout:
         print("SKIP: timed out but found no errors")

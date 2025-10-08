@@ -6,6 +6,7 @@ import sys
 import tempfile
 from argparse import ArgumentParser
 from time import time
+from subprocess import Popen
 
 from .hfst import load_hfst
 from .lexc import scrapelemmas
@@ -41,6 +42,8 @@ def main():
                       help="stop trying after so many oovs")
     argp.add_argument("-B", "--time-out", type=int, default=60,
                       help="max time to use with lemmas")
+    argp.add_argument("-E", "--editor", type=str,
+                      help="open failures in EDITOR afterwards")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
                                           delete=False, encoding="UTF-8",
@@ -84,6 +87,8 @@ def main():
         now = time()
         if now - start > options.time_out:
             print(f"bailing after timeout: {now - start}")
+            print("\nFINISHED PREMATURELY HERE DUE TO TIMEOUT:",
+                  options.time_out, file=logfile)
             timedout = True
             break
     if lines == 0:
@@ -98,10 +103,14 @@ def main():
         print("FAIL: too many lemmas weren't generating!",
               f"{coverage} < {options.threshold}")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        if options.editor:
+            Popen([options.editor, logfile.name])
         sys.exit(1)
     elif timedout and oovs > 0:
         print("FAIL: timed out with ungenerated lemmas")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        if options.editor:
+            Popen([options.editor, logfile.name])
         sys.exit(1)
     elif timedout:
         print("SKIP: timed out but didn't find  problems")

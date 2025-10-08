@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 from argparse import ArgumentParser
+from subprocess import Popen
 
 from .lexc import scrapelemmas
 
@@ -35,6 +36,8 @@ def main():
                       help="stop trying after so many oovs")
     argp.add_argument("-B", "--time-out", type=int, default=60,
                       help="max time used to test lemmas")
+    argp.add_argument("-E", "--editor", type=str,
+                      help="open failures in EDITOR afterwards")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="lemmaspell", suffix=".txt",
                                           delete=False, encoding="UTF-8",
@@ -108,6 +111,8 @@ def main():
         print("FAIL: too many lemmas weren't generating!",
               f"{coverage} < {options.threshold}")
         print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        if options.editor:
+            Popen([options.editor, logfile.name])
         sys.exit(1)
     else:
         print(f"PASS: {len(lemmas)} lemmas {coverage} % accepted")
