@@ -5,7 +5,8 @@ import re
 from typing import IO
 
 GLOBAL_EXCLUSIONS = ["CmpN/Only", "ShCmp", "Cmp/SplitR",
-                     " Rreal ", " R ", " RNoun ", "NOT-TO-LEMMATEST",
+                     " Rreal ", " R ", " RNoun ", " Rnoun ",
+                     "NOT-TO-LEMMATEST",
                      "Use/Spell-", "SpellNoSugg", "\\+Pref"]
 
 
