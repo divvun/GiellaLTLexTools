@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from subprocess import Popen
 from time import time
 
+from .hfstpope import load_hfst_pope
 from .hfst import load_hfst
 from .lexc import scrapelemmas
 
@@ -40,11 +41,20 @@ def main():
                       help="do not count oov if analysis contained in file")
     argp.add_argument("-E", "--editor", type=str,
                       help="open failures in EDITOR afterwards")
+    argp.add_argument("-D", "--driver", choices=["subprocess", "pyhfst"],
+                      default="subprocess",
+                      help="select method of running hfstol files")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
                                           delete=False, encoding="UTF-8",
                                           mode="w+")
-    generator = load_hfst(options.generatorfilename)
+    if options.driver == "subprocess":
+        generator = load_hfst_pope(options.generatorfilename)
+    elif options.driver == "pyhfst":
+        generator = load_hfst(options.generatorfilename)
+    else:
+        print(f"unusable driver {options.driver}")
+        sys.exit(2)
     paradigms = [l.strip() for l in options.paradigmfile.readlines() if
                  l.strip() != ""]
     skipforms = None

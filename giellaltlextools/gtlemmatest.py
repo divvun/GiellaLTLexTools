@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from time import time
 from subprocess import Popen
 
+from .hfstpope import load_hfst_pope
 from .hfst import load_hfst
 from .lexc import scrapelemmas
 
@@ -44,16 +45,30 @@ def main():
                       help="max time to use with lemmas")
     argp.add_argument("-E", "--editor", type=str,
                       help="open failures in EDITOR afterwards")
+    argp.add_argument("-D", "--driver", choices=["subprocess", "pyhfst"],
+                      default="subprocess",
+                      help="use subprocess instead of pyhfst for hfst lookups")
     options = argp.parse_args()
     logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
                                           delete=False, encoding="UTF-8",
                                           mode="w+")
-    generator = load_hfst(options.generatorfilename)
-    analyser = load_hfst(options.analyserfilename)
+    if options.driver == "subprocess":
+        generator = load_hfst_pope(options.generatorfilename)
+        analyser = load_hfst_pope(options.analyserfilename)
+    elif options.driver == "pyhfst":
+        generator = load_hfst(options.generatorfilename)
+        analyser = load_hfst(options.analyserfilename)
+    else:
+        print(f"bad driver {options.driver}")
+        sys.exit(2)
     skipforms = None
     if options.acceptable_forms:
         skipforms = [l.strip() for l in options.acceptable_forms.readlines()]
+    start = time()
     lemmas = scrapelemmas(options.lexcfile, options.exclude, options.debug)
+    end = time()
+    if options.verbose:
+        print(f"used {end-start} times for lemma scraping")
     lines = 0
     oovs = 0
     start = time()
@@ -81,6 +96,8 @@ def main():
                 print(f"\tN.B: {lemma} has following analyses", file=logfile)
                 for analysis in analyses:
                     print(f"\t{analysis}", file=logfile)
+                    if options.verbose:
+                        print(f"\t{analysis}")
             if oovs >= options.oov_limit:
                 print("too many fails, bailing to save time...")
                 break
@@ -91,11 +108,13 @@ def main():
                   options.time_out, file=logfile)
             timedout = True
             break
+    end = time()
     if lines == 0:
         print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
         sys.exit(77)
     coverage = (1.0 - (float(oovs) / float(lines))) * 100.0
     if options.verbose:
+        print(f"used {end-start} times for generating")
         print("Lemma statistics:")
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % success")
