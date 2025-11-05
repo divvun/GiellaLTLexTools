@@ -49,7 +49,7 @@ def main():
                       default="subprocess",
                       help="use subprocess instead of pyhfst for hfst lookups")
     options = argp.parse_args()
-    logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
+    logfile = tempfile.NamedTemporaryFile(prefix="gtlemmatest", suffix=".txt",
                                           delete=False, encoding="UTF-8",
                                           mode="w+")
     if options.driver == "subprocess":

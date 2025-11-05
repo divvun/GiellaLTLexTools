@@ -39,7 +39,7 @@ def main():
     argp.add_argument("-E", "--editor", type=str,
                       help="open failures in EDITOR afterwards")
     options = argp.parse_args()
-    logfile = tempfile.NamedTemporaryFile(prefix="lemmaspell", suffix=".txt",
+    logfile = tempfile.NamedTemporaryFile(prefix="gtlemmaspell", suffix=".txt",
                                           delete=False, encoding="UTF-8",
                                           mode="w+")
     if "divvunspell" in options.runnerfilename:

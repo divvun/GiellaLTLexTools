@@ -45,7 +45,7 @@ def main():
                       default="subprocess",
                       help="select method of running hfstol files")
     options = argp.parse_args()
-    logfile = tempfile.NamedTemporaryFile(prefix="paradigm", suffix=".txt",
+    logfile = tempfile.NamedTemporaryFile(prefix="gtparadigmtest", suffix=".txt",
                                           delete=False, encoding="UTF-8",
                                           mode="w+")
     if options.driver == "subprocess":
