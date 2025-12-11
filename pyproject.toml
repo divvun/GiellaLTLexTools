@@ -13,6 +13,7 @@ gtlemmatest = "giellaltlextools.gtlemmatest:main"
 gtparadigmtest = "giellaltlextools.gtparadigmtest:main"
 gtspelltest = "giellaltlextools.gtspelltest:main"
 gtmultichartest = "giellaltlextools.gtmultichartest:main"
+gtmissing = "giellaltlextools.gtmissing:main"
 
 [build-system]
 requires = ["poetry-core", "cython>=3.0.0"]
