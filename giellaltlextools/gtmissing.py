@@ -1,16 +1,16 @@
 """Analyse tokenised input and provide lexc suggestions for missing words.
 
 Make a suggestion for a missing word
-    echo "word" | missing.py -l sme
+    echo "word" | gtmissing.py -l sme
 
 Make a suggestion for a multiword expression
-    echo "multi word" | missing.py -l sme
+    echo "multi word" | gtmissing.py -l sme
 
 Make a suggestion for an unlexicalised compound or derivation
-    echo "compoundword" | missing.py -l sme
+    echo "compoundword" | gtmissing.py -l sme
 
 Make suggestions for a whole corpus, save it to a file
-    missing.py \\
+    gtmissing.py \\
         -l sme \\
         --input sme-tokenised-corpus-words.txt \\
         --output missing_sme_corpus.lexc
