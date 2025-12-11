@@ -67,7 +67,7 @@ LEXC_CONTENT_RE = re.compile(
 
 
 def parse_line(
-    old_match, lexc_filename: str, lexicon_name: str
+    old_match: dict[str, str], lexc_filename: str, lexicon_name: str
 ) -> Optional[LexcEntry]:
     """Parse a lexc line.
 
@@ -77,10 +77,6 @@ def parse_line(
     Returns:
         The entries inside the lexc line expressed as a dict
     """
-    line_dict = defaultdict(str)
-
-    line_dict["contlex"] = old_match.get("contlex")
-
     line = old_match.get("content")
     if not line:
         return None
@@ -91,13 +87,15 @@ def parse_line(
         return None
 
     uppers = upper.split("+")
-    line_dict["stem"] = uppers[0]
-    line_dict["tags"] = uppers[1:]
-    line_dict["lower"] = lower.strip()
-    line_dict["filename"] = lexc_filename
-    line_dict["parent_lexicon"] = lexicon_name
 
-    return LexcEntry(**line_dict)
+    return LexcEntry(
+        stem=uppers[0],
+        tags=uppers[1:],
+        lower=lower.strip(),
+        contlex=old_match.get("contlex", ""),
+        filename=lexc_filename,
+        parent_lexicon=lexicon_name,
+    )
 
 
 def make_lexc_entry(
