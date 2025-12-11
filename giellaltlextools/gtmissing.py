@@ -177,7 +177,7 @@ def read_lexc_files(lang_directory: Path) -> dict[str, list[LexcEntry]]:
         A dictionary with the stems as keys and list of LexcEntries are values.
     """
 
-    lexc_dict = defaultdict(list)
+    lexc_dict: dict[str, list[LexcEntry]] = defaultdict(list)
     for lexc_file in get_lexc_files(lang_directory):
         for lexc_entry in handle_lexc_lines(
             lines=get_lexc_lines(lexc_file), lexc_filename=lexc_file.name
@@ -196,8 +196,9 @@ def parse_hfst_line(hfst_line: str) -> tuple[str, str]:
     Returns:
         A tuple with the stem and the analysis.
     """
+    number_of_hfst_fields = 3
     fields = hfst_line.split("\t")
-    if len(fields) != 3:
+    if len(fields) != number_of_hfst_fields:
         raise ValueError("Invalid HFST line: {}".format(hfst_line))
 
     return fields[0], fields[1]
@@ -529,7 +530,8 @@ def parse_args():
         "-l",
         "--language",
         required=True,
-        help="The language to analyse. This should be the language code, e.g., 'sme' for Northern Sami.",
+        help="The language to analyse. This should be the language code, "
+        "e.g., 'sme' for Northern Sami.",
     )
     parser.add_argument(
         "-o",
