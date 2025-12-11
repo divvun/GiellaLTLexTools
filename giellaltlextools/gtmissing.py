@@ -652,9 +652,6 @@ def main():
         args.normative_fst, args.descriptive_fst, lang_directory, args.language
     )
 
-    # Read lexc files
-    lexc_dict = read_lexc_files(lang_directory)
-
     # Save output from the normative analyser.
     input_stream = (
         sys.stdin if args.infile == sys.stdin else args.infile.open()
@@ -707,6 +704,9 @@ def main():
     if not (missing_desc_words or compounds_and_derivations_only):
         print("No missing words or unlexicalised compounds found.")
         sys.exit(0)
+
+    # Read lexc files
+    lexc_dict = read_lexc_files(lang_directory)
 
     output_stream = (
         sys.stdout if args.outfile == sys.stdout else args.outfile.open("w")
