@@ -692,6 +692,22 @@ def main():
 
     # The words unknown to both the normative and the descriptive analyser
     # are given as the second argument.
+
+    missing_desc_words = {
+        line.split("\t")[0]
+        for line in descriptive_output
+        if line.endswith("inf")
+    }
+    compounds_and_derivations_only = filter_derivations_and_compounds(
+        parse_hfst_output(
+            {line for line in norm_output if not line.endswith("inf")}
+        )
+    )
+    descriptive_typos = remove_typos(parse_hfst_output(descriptive_output))
+    if not (missing_desc_words or compounds_and_derivations_only):
+        print("No missing words or unlexicalised compounds found.")
+        sys.exit(0)
+
     output_stream = (
         sys.stdout if args.outfile == sys.stdout else args.outfile.open("w")
     )
@@ -699,24 +715,17 @@ def main():
         "\n".join(
             print_missing_suggestions(
                 lexc_dict=lexc_dict,
-                missing_desc_words={
-                    line.split("\t")[0]
-                    for line in descriptive_output
-                    if line.endswith("inf")
-                },
+                missing_desc_words=missing_desc_words,
                 comment_string=comment + input_filename,
             )
         ),
         file=output_stream,
     )
+
     print(
         print_lexicalised_compounds(
             lexc_dict,
-            compounds_and_derivations_only=filter_derivations_and_compounds(
-                parse_hfst_output(
-                    {line for line in norm_output if not line.endswith("inf")}
-                )
-            ),
+            compounds_and_derivations_only=compounds_and_derivations_only,
             comment_string=comment + input_filename,
         ),
         file=output_stream,
@@ -724,9 +733,7 @@ def main():
     if not args.no_typos:
         print(
             print_typos(
-                descriptive_typos=remove_typos(
-                    parse_hfst_output(descriptive_output)
-                )
+                descriptive_typos=descriptive_typos,
             ),
             file=output_stream,
         )
