@@ -474,8 +474,8 @@ def print_lexicalised_compounds(
 
     Args:
         lexc_dict: The lexc dictionary.
-        compounds_and_derivations_only: The compounds and derivations that are not
-            lexicalised.
+        compounds_and_derivations_only: The compounds and derivations that are
+            not lexicalised.
     """
     if compounds_and_derivations_only:
         return "\n\n!!! Compounds and derivations only !!!\n" + "\n".join(
