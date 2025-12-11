@@ -147,7 +147,7 @@ def get_lexc_files(lang_directory: Path) -> Iterable[Path]:
 
 
 def handle_lexc_lines(
-    lines: Iterable[str], lexc_filename
+    lines: Iterable[str], lexc_filename: str
 ) -> Iterable[LexcEntry]:
     """Handle lexc lines from a file."""
     lexicon_name = None
