@@ -578,7 +578,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_language_parent(lang_root: Optional[str]) -> Optional[Path]:
+def get_language_parent(lang_root: Optional[str]) -> Path:
     if lang_root is None:
         lang_parent = os.getenv("GTLANGS")
         if not lang_parent:
