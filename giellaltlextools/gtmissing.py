@@ -66,7 +66,9 @@ LEXC_CONTENT_RE = re.compile(
 )
 
 
-def parse_line(old_match, lexc_filename: str, lexicon_name: str) -> Optional[LexcEntry]:
+def parse_line(
+    old_match, lexc_filename: str, lexicon_name: str
+) -> Optional[LexcEntry]:
     """Parse a lexc line.
 
     Arguments:
@@ -146,7 +148,9 @@ def get_lexc_files(lang_directory: Path) -> Iterable[Path]:
     )
 
 
-def handle_lexc_lines(lines: Iterable[str], lexc_filename) -> Iterable[LexcEntry]:
+def handle_lexc_lines(
+    lines: Iterable[str], lexc_filename
+) -> Iterable[LexcEntry]:
     """Handle lexc lines from a file."""
     lexicon_name = None
     for line in lines:
@@ -239,11 +243,15 @@ def filter_derivations_and_compounds(
     return {
         stem: analyses
         for stem, analyses in parsed_hfst_output.items()
-        if all("+Cmp#" in analysis or "+Der" in analysis for analysis in analyses)
+        if all(
+            "+Cmp#" in analysis or "+Der" in analysis for analysis in analyses
+        )
     }
 
 
-def remove_typos(parsed_hfst_output: dict[str, list[str]]) -> dict[str, list[str]]:
+def remove_typos(
+    parsed_hfst_output: dict[str, list[str]],
+) -> dict[str, list[str]]:
     """Remove entries not contained in the analyser.
 
     Args:
@@ -332,7 +340,9 @@ def lexicalise_compound(
     ]
     matching_lexc_entries = lexc_dict.get(longest_last_stem, [])
 
-    logging.debug(f"{prefix=} {unlexicalised_compound_stem=} {longest_last_stem=}")
+    logging.debug(
+        f"{prefix=} {unlexicalised_compound_stem=} {longest_last_stem=}"
+    )
     return (
         LexcEntry(
             stem=f"{prefix}{longest_last_stem}",
@@ -394,7 +404,9 @@ def make_missing_lexc_entry(
             j += 1
 
     new_lower = hfst_prefix + old_lower[j:]
-    logging.debug(f"{hfst_stem=} {common_ending=} {lexc_entry.stem=} {new_lower=}")
+    logging.debug(
+        f"{hfst_stem=} {common_ending=} {lexc_entry.stem=} {new_lower=}"
+    )
     return LexcEntry(
         stem=hfst_stem,
         tags=lexc_entry.tags,
@@ -470,7 +482,9 @@ def print_lexicalised_compounds(
             [
                 str(lexc_entry) + comment_string
                 for hfst_stem, analyses in compounds_and_derivations_only.items()
-                for lexc_entry in lexicalise_compound(hfst_stem, analyses, lexc_dict)
+                for lexc_entry in lexicalise_compound(
+                    hfst_stem, analyses, lexc_dict
+                )
             ]
         )
 
@@ -503,15 +517,18 @@ def print_missing_suggestions(
                 for lexc_entry in lexc_dict[stem]
             ]
         )
-        yield "\n".join(
-            str(
-                make_missing_lexc_entry(
-                    desc_missing_word, common_ending, matching_entry
+        yield (
+            "\n".join(
+                str(
+                    make_missing_lexc_entry(
+                        desc_missing_word, common_ending, matching_entry
+                    )
                 )
+                + comment_string
+                for matching_entry in matching_entries
             )
-            + comment_string
-            for matching_entry in matching_entries
-        ) + "\n"
+            + "\n"
+        )
 
 
 def parse_args():
@@ -562,7 +579,10 @@ def parse_args():
         type=Path,
     )
     parser.add_argument(
-        "-c", "--comment", help="A freestyle comment to add to the output", default=""
+        "-c",
+        "--comment",
+        help="A freestyle comment to add to the output",
+        default="",
     )
     parser.add_argument(
         "-r",
@@ -609,6 +629,7 @@ def get_analysers(
         Path("/usr/local/share/giella/") / language,
         Path("/usr/share/giella/") / language,
     ]:
+        logging.debug(f"Looking for analysers in {prefix}")
         normative_path = prefix / "analyser-gt-norm.hfstol"
         descriptive_path = prefix / "analyser-gt-desc.hfstol"
 
@@ -635,9 +656,12 @@ def main():
     lexc_dict = read_lexc_files(lang_directory)
 
     # Save output from the normative analyser.
-    input_stream = sys.stdin if args.infile == sys.stdin else args.infile.open()
+    input_stream = (
+        sys.stdin if args.infile == sys.stdin else args.infile.open()
+    )
     norm_output = analyse_expressions(
-        fst=normative_analyser, lines={line for line in input_stream if line.strip()}
+        fst=normative_analyser,
+        lines={line for line in input_stream if line.strip()},
     )
 
     # Save the words unknown to the normative analyser.
@@ -668,7 +692,9 @@ def main():
 
     # The words unknown to both the normative and the descriptive analyser
     # are given as the second argument.
-    output_stream = sys.stdout if args.outfile == sys.stdout else args.outfile.open("w")
+    output_stream = (
+        sys.stdout if args.outfile == sys.stdout else args.outfile.open("w")
+    )
     print(
         "\n".join(
             print_missing_suggestions(
@@ -698,7 +724,9 @@ def main():
     if not args.no_typos:
         print(
             print_typos(
-                descriptive_typos=remove_typos(parse_hfst_output(descriptive_output))
+                descriptive_typos=remove_typos(
+                    parse_hfst_output(descriptive_output)
+                )
             ),
             file=output_stream,
         )
