@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "giellaltlextools"
-version = "0.3.2"
+version = "0.4.0"
 description = "Test and process lexicon data for giellalt projects"
-authors = ["Flammie A Pirinen <flammie@iki.fi>"]
+authors = ["Flammie A Pirinen <flammie@iki.fi>", "Børre Gaup <albbas@gmail.com>"]
 readme = "README.md"
 homepage = "https://divvun.github.io/giellaltlextools"
 repository = "https://github.com/divvun/giellaltlextools"
