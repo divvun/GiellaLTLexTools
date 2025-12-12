@@ -27,6 +27,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
 
+from giellaltlextools.hfst import load_hfst  # type: ignore
+
 
 @dataclass
 class LexcEntry:
@@ -227,8 +229,8 @@ def parse_hfst_output(
 
 
 def filter_derivations_and_compounds(
-    parsed_hfst_output: dict[str, list[str]],
-) -> dict[str, list[str]]:
+    parsed_hfst_output: dict[str, set[str]],
+) -> dict[str, set[str]]:
     """Pick stems that are unlexicalised compounds or derivations.
 
     Args:
@@ -244,25 +246,6 @@ def filter_derivations_and_compounds(
         if all(
             "+Cmp#" in analysis or "+Der" in analysis for analysis in analyses
         )
-    }
-
-
-def remove_typos(
-    parsed_hfst_output: dict[str, list[str]],
-) -> dict[str, list[str]]:
-    """Remove entries not contained in the analyser.
-
-    Args:
-        parsed_hfst_output: The parsed hfst output.
-
-    Returns:
-        A dictionary with the stems as keys and the analyses as values.
-        It contains only stems that are not typos.
-    """
-    return {
-        stem: analyses
-        for stem, analyses in parsed_hfst_output.items()
-        if not all(analysis.endswith("?") for analysis in analyses)
     }
 
 
@@ -290,7 +273,50 @@ def analyse_expressions(fst: Path, lines: Iterable[str]) -> list[str]:
     ]
 
 
-def get_longest_cmp_stem(suffix: str, analyses: list[str]) -> str:
+def pyhfst_analyse_expressions(
+    fst: Path, lines: Iterable[str]
+) -> Iterator[tuple[str, set[str]]]:
+    """Analyse a list of expressions using a HFST FST with pyhfst.
+
+    Args:
+        fst: The path to the HFST FST.
+        lines: The expressions to analyse.
+
+    Returns:
+        The analyses of the expressions.
+    """
+    analyser = load_hfst(fst.as_posix())  # type: ignore
+    for line in lines:
+        analyses = analyser.lookup(line.strip())  # type: ignore
+        if analyses:
+            yield line.strip(), {analysis[0] for analysis in analyses}  # type: ignore
+        else:
+            yield line.strip(), set()
+
+
+def categorise_pyhfst_output(
+    pyhfst_output: Iterator[tuple[str, set[str]]],
+) -> tuple[dict[str, set[str]], set[str]]:
+    """Categorise pyhfst output into a dictionary.
+
+    Args:
+        pyhfst_output: The output from pyhfst analyse_expressions.
+
+    Returns:
+        A dictionary with the stems as keys and the analyses as values.
+    """
+    analysed: dict[str, set[str]] = defaultdict(set)
+    typos: set[str] = set()
+    for stem, analyses in pyhfst_output:
+        if analyses and stem not in analysed:
+            analysed[stem] = analyses
+        elif not analyses and stem not in typos:
+            typos.add(stem)
+
+    return analysed, typos
+
+
+def get_longest_cmp_stem(suffix: str, analyses: set[str]) -> str:
     """Get the longest last compound stem from a list of analyses."""
     for analysis in analyses:
         logging.debug(f"{analysis=}")
@@ -307,7 +333,7 @@ def get_longest_cmp_stem(suffix: str, analyses: list[str]) -> str:
 
 def lexicalise_compound(
     unlexicalised_compound_stem: str,
-    analyses: list[str],
+    analyses: set[str],
     lexc_dict: dict[str, list[LexcEntry]],
 ) -> Iterator[LexcEntry]:
     """Lexicalise an unlexicalised compound stem.
@@ -444,28 +470,27 @@ def get_shortest_matching_lexc_entries(
     ]
 
 
-def print_typos(descriptive_typos: dict[str, list[str]]) -> str:
+def get_typos(descriptive_typos: dict[str, set[str]]) -> Iterator[str]:
     """Print typos with their analyses.
 
     Args:
         descriptive_typos: These are typos, since they are found in the
             descriptive analyser, but not in the normative analyser.
     """
-    if descriptive_typos:
-        return "\n\n!!! Typos !!!\n" + "\n".join(
-            f"! {hfst_stem}\n"
-            + "\n".join(f"!\t{analysis}" for analysis in analyses)
-            + "\n"
-            for hfst_stem, analyses in descriptive_typos.items()
-        )
-    return ""
+    yield "!Typos\n"
+    yield from (
+        f"! {hfst_stem}\n"
+        + "\n".join(f"!\t{analysis}" for analysis in analyses)
+        + "\n"
+        for hfst_stem, analyses in descriptive_typos.items()
+    )
 
 
-def print_lexicalised_compounds(
+def get_lexicalised_compounds(
     lexc_dict: dict[str, list[LexcEntry]],
-    compounds_and_derivations_only: dict[str, list[str]],
+    compounds_and_derivations_only: dict[str, set[str]],
     comment_string: str,
-) -> str:
+) -> Iterator[str]:
     """Lexicalise compounds and derivations
 
     Present tentive lexc entries to the linguist.
@@ -475,26 +500,20 @@ def print_lexicalised_compounds(
         compounds_and_derivations_only: The compounds and derivations that are
             not lexicalised.
     """
-    if compounds_and_derivations_only:
-        return "\n\n!!! Compounds and derivations only !!!\n" + "\n".join(
-            [
-                str(lexc_entry) + comment_string
-                for hfst_stem, analyses in compounds_and_derivations_only.items()
-                for lexc_entry in lexicalise_compound(
-                    hfst_stem, analyses, lexc_dict
-                )
-            ]
-        )
-
-    return ""
+    yield "! Compounds and derivations only\n"
+    yield from (
+        str(lexc_entry) + comment_string
+        for hfst_stem, analyses in compounds_and_derivations_only.items()
+        for lexc_entry in lexicalise_compound(hfst_stem, analyses, lexc_dict)
+    )
 
 
-def print_missing_suggestions(
+def get_typos_suggestions(
     lexc_dict: dict[str, list[LexcEntry]],
     missing_desc_words: set[str],
     comment_string: str,
 ) -> Iterator[str]:
-    """Print suggestions for missing words in the descriptive analyser.
+    """Yield suggestions for missing words in the descriptive analyser.
 
     Match the missing words with the lexc dictionary and present tentive lexc
     entries to the linguist.
@@ -504,29 +523,36 @@ def print_missing_suggestions(
         missing_desc_words: Words that are unknown to both the normative
             and descriptive analyser.
     """
-    for desc_missing_word in missing_desc_words:
+    yield "! Suggestions for missing words\n"
+    for desc_missing_word in sorted(missing_desc_words):
         common_ending, matching_lexc_stems = get_matching_lexc_stems(
             desc_missing_word, list(lexc_dict.keys())
         )
-        matching_entries = get_shortest_matching_lexc_entries(
-            [
-                lexc_entry
-                for stem in matching_lexc_stems
-                for lexc_entry in lexc_dict[stem]
-            ]
-        )
-        yield (
-            "\n".join(
-                str(
-                    make_missing_lexc_entry(
-                        desc_missing_word, common_ending, matching_entry
-                    )
-                )
-                + comment_string
-                for matching_entry in matching_entries
+
+        lexc_entries = [
+            make_missing_lexc_entry(
+                desc_missing_word, common_ending, matching_entry
             )
-            + "\n"
-        )
+            for matching_entry in get_shortest_matching_lexc_entries(
+                [
+                    lexc_entry
+                    for stem in matching_lexc_stems
+                    for lexc_entry in lexc_dict[stem]
+                ]
+            )
+        ]
+
+        lexc_strings = [
+            str(lexc_entry)
+            for lexc_entry in lexc_entries
+            if str(lexc_entry).strip()
+        ]
+        if lexc_strings:
+            yield f"! Suggestions for missing word: {desc_missing_word}"
+            yield from (
+                lexc_string + comment_string for lexc_string in lexc_strings
+            )
+            yield "\n"
 
 
 def parse_args():
@@ -654,21 +680,18 @@ def main():
     input_stream = (
         sys.stdin if args.infile == sys.stdin else args.infile.open()
     )
-    norm_output = analyse_expressions(
-        fst=normative_analyser,
-        lines={line for line in input_stream if line.strip()},
+    norm_analysed, norm_typos = categorise_pyhfst_output(
+        pyhfst_analyse_expressions(
+            fst=normative_analyser,
+            lines={line for line in input_stream if line.strip()},
+        )
     )
-
-    # Save the words unknown to the normative analyser.
-    missing_norm_words = {
-        line.split("\t")[0] for line in norm_output if line.endswith("inf")
-    }
 
     # The words that are missing in the normative analyser may be typos.
     # Sending those words through the descriptive analyser gives us a list of
     # typos and really unknown words.
-    descriptive_output = analyse_expressions(
-        fst=descriptive_analyser, lines=missing_norm_words
+    descriptive_analysed, descriptive_typos = categorise_pyhfst_output(
+        pyhfst_analyse_expressions(fst=descriptive_analyser, lines=norm_typos)
     )
 
     if args.infile == sys.stdin:
@@ -688,18 +711,14 @@ def main():
     # The words unknown to both the normative and the descriptive analyser
     # are given as the second argument.
 
-    missing_desc_words = {
-        line.split("\t")[0]
-        for line in descriptive_output
-        if line.endswith("inf")
-    }
     compounds_and_derivations_only = filter_derivations_and_compounds(
-        parse_hfst_output(
-            {line for line in norm_output if not line.endswith("inf")}
-        )
+        norm_analysed
     )
-    descriptive_typos = remove_typos(parse_hfst_output(descriptive_output))
-    if not (missing_desc_words or compounds_and_derivations_only):
+    if not (
+        descriptive_typos
+        or compounds_and_derivations_only
+        or descriptive_analysed
+    ):
         print("No missing words or unlexicalised compounds found.")
         sys.exit(0)
 
@@ -711,9 +730,9 @@ def main():
     )
     print(
         "\n".join(
-            print_missing_suggestions(
+            get_typos_suggestions(
                 lexc_dict=lexc_dict,
-                missing_desc_words=missing_desc_words,
+                missing_desc_words=descriptive_typos,
                 comment_string=comment + input_filename,
             )
         ),
@@ -721,17 +740,21 @@ def main():
     )
 
     print(
-        print_lexicalised_compounds(
-            lexc_dict,
-            compounds_and_derivations_only=compounds_and_derivations_only,
-            comment_string=comment + input_filename,
+        "\n".join(
+            get_lexicalised_compounds(
+                lexc_dict,
+                compounds_and_derivations_only=compounds_and_derivations_only,
+                comment_string=comment + input_filename,
+            )
         ),
         file=output_stream,
     )
     if not args.no_typos:
         print(
-            print_typos(
-                descriptive_typos=descriptive_typos,
+            "\n".join(
+                get_typos(
+                    descriptive_typos=descriptive_analysed,
+                )
             ),
             file=output_stream,
         )
