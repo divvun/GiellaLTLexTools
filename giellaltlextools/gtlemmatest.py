@@ -29,7 +29,7 @@ def main():
                       help="tags that lemma form should have in generator",
                       required=True)
     argp.add_argument("-T", "--threshold", type=int,
-                      help="required % proportion of succesful generations",
+                      help="required percentage of succesful generations",
                       default=99)
     argp.add_argument("-d", "--debug", action="store_true", default=False,
                       help="prints debugging outputs")
