@@ -15,6 +15,9 @@ def main():
     argp = ArgumentParser()
     argp.add_argument("lexcfilenames", nargs="+",
                       help="read lemmas from the lexc files")
+    argp.add_argument("-V", "--version", action="version",
+                      version=f"%(prog)s {__version__}",
+                      help="print version info")
     argp.add_argument("-z", "--zhfst", type=str, dest="zhfstfilename",
                       help="ZHFST speller for analysing missing lemmas",
                       required=True)

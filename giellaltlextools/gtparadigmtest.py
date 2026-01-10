@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from subprocess import Popen
 from time import time
 
+from . import __version__
 from .hfstpope import load_hfst_pope
 from .hfst import load_hfst
 from .lexc import scrapelemmas
@@ -15,6 +16,9 @@ from .lexc import scrapelemmas
 def main():
     """CLI for GiellaLT paradigm generation tests."""
     argp = ArgumentParser()
+    argp.add_argument("-V", "--version", action="version",
+                      version=f"%(prog)s {__version__}",
+                      help="print version info")
     argp.add_argument("-p", "--paradigm", type=open, dest="paradigmfile",
                       help="list of tagstrings making up the paradigm",
                       required=True)

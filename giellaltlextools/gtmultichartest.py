@@ -6,10 +6,14 @@ import sys
 from argparse import ArgumentParser
 from time import time
 
+from . import __version__
 
 def main():
     """CLI for GiellaLT lemma generation tests."""
     argp = ArgumentParser()
+    argp.add_argument("-V", "--version", action="version",
+                      version=f"%(prog)s {__version__}",
+                      help="print version info")
     argp.add_argument("-l", "--lexc", type=open, dest="lexcfile",
                       help="read multichars from lexc file",
                       required=True)

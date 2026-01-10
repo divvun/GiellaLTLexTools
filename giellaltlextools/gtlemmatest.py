@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 """GiellaLT tests for lemma generation."""
 
-import re
 import sys
 import tempfile
 from argparse import ArgumentParser
-from time import time
 from subprocess import Popen
+from time import time
 
-from .hfstpope import load_hfst_pope
+from . import __version__
 from .hfst import load_hfst
+from .hfstpope import load_hfst_pope
 from .lexc import scrapelemmas
 
 
 def main():
     """CLI for GiellaLT lemma generation tests."""
     argp = ArgumentParser()
+    argp.add_argument("-V", "--version", action="version",
+                      version=f"%(prog)s {__version__}",
+                      help="print version info")
     argp.add_argument("-l", "--lexc", type=open, dest="lexcfile",
                       help="read lemmas from the lexc file",
                       required=True)
