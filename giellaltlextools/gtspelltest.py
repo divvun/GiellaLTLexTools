@@ -7,6 +7,7 @@ import tempfile
 from argparse import ArgumentParser
 from subprocess import Popen
 
+from . import __version__
 from .lexc import scrapelemmas
 
 
