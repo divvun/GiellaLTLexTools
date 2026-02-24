@@ -128,15 +128,29 @@ def main():
         if options.editor:
             Popen([options.editor, logfile.name])
         sys.exit(1)
-    elif timedout and oovs > 0:
-        print("FAIL: timed out with ungenerated lemmas")
-        print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+    else:
+        if timedout and oovs > 0:
+            print("FAIL: timed out with ungenerated lemmas")
+            print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+            if options.editor:
+                Popen([options.editor, logfile.name])
+            sys.exit(1)
+        elif timedout:
+            print("SKIP: timed out but didn't find  problems")
+            sys.exit(77)
+        elif oovs > 0:
+            print("SUCCESS: within threshold!",
+                  f"{coverage} >= {options.threshold})")
+            if options.editor:
+                Popen([options.editor, logfile.name])
+                sys.exit(0)
+    if oovs > 0:
+        print("SUCCESS: within threshold!",
+              f"{coverage} >= {options.threshold})")
         if options.editor:
             Popen([options.editor, logfile.name])
-        sys.exit(1)
-    elif timedout:
-        print("SKIP: timed out but didn't find  problems")
-        sys.exit(77)
+            sys.exit(0)
+
 
 
 if __name__ == "__main__":
