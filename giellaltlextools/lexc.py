@@ -84,6 +84,7 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
             lexcline = lexcline.split("!")[0]
         lexcline = lexcline.strip()
         lexcline = killflagdiacritics(lexcline)
+        lexcline = lexcline.replace("0", "")
         # see stuff
         if lexcline.startswith("LEXICON "):
             continue
