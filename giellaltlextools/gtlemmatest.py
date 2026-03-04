@@ -182,7 +182,7 @@ def main():
             print(f"Running: {options.editor} {logfile.name}")
             Popen([options.editor, logfile.name])
             sys.exit(0)
-    print(colored("SUCCESS"))
+    print(colored("SUCCESS", "green"))
 
 
 if __name__ == "__main__":
