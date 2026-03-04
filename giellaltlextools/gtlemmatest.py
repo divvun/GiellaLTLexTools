@@ -6,6 +6,7 @@ import tempfile
 from argparse import ArgumentParser
 from subprocess import Popen
 from time import time
+from termcolor import colored, cprint
 
 from . import __version__
 from .hfst import load_hfst
@@ -142,37 +143,46 @@ def main():
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % success")
     if coverage < options.threshold:
-        print("FAIL: too many lemmas wrong!",
-              f"{coverage} < {options.threshold}")
-        print(f"see {logfile.name} for details")
-        print(f"({oovs} ungenerated strings, {misses} wrong lemmas)")
+        print(colored("FAIL:", "red"),
+              f"{oovs} ungenerated strings, {misses} wrong lemmas",
+              f"({coverage} < {options.threshold})")
+        print("open", colored(options.lexcfile.name, "cyan"), "to fix")
+        print("see", colored(logfile.name, "magenta"), "for details")
         if options.editor:
+            print(f"Running: {options.editor} {logfile.name}")
             Popen([options.editor, logfile.name])
         sys.exit(1)
     else:
         if timedout and failures > 0:
-            print("FAIL: timed out with ungenerated lemmas")
+            print(colored("FAIL:", "red"), "timed out with ungenerated lemmas")
+            print(f"{oovs} ungenerated strings, {mismatches} wrong lemmas")
             print(f"see {logfile.name} for details")
-            print(f"({oovs} ungenerated strings, {mismatches} wrong lemmas)")
             if options.editor:
+                print(f"Running: {options.editor} {logfile.name}")
                 Popen([options.editor, logfile.name])
             sys.exit(1)
         elif timedout:
-            print("SKIP: timed out but didn't find  problems")
+            print(colored("SKIP:", "cyan"),
+                  "timed out but didn't find  problems..")
             sys.exit(77)
         elif failures > 0:
-            print("SUCCESS: within threshold!",
-                  f"{coverage} >= {options.threshold})")
+            print(colored("SUCCESS:", "green"),
+                  f"{oovs} ungenerated strings, {mismatches} wrong lemmas",
+                  f"(accepted by -T: {coverage} >= {options.threshold})")
             if options.editor:
+                print(f"Running: {options.editor} {logfile.name}")
                 Popen([options.editor, logfile.name])
                 sys.exit(0)
     if failures > 0:
-        print("SUCCESS: within threshold!",
-              f"{coverage} >= {options.threshold})")
+        print(colored("SUCCESS:", "green"),
+              f"{oovs} ungenerated strings, {mismatches} wrong lemmas",
+              f"{coverage} >= {options.threshold})"
+              f"(accepted by -T: {coverage} >= {options.threshold})")
         if options.editor:
+            print(f"Running: {options.editor} {logfile.name}")
             Popen([options.editor, logfile.name])
             sys.exit(0)
-
+    print(colored("SUCCESS"))
 
 
 if __name__ == "__main__":
