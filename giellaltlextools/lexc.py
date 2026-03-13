@@ -96,6 +96,8 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
             continue
         if len(lexcline.split()) <= 2:
             continue
+        if "§REGEX" in lexcline:
+            continue
         if ":" in lexcline:
             analysis = unhidelexcescapes(lexcline.split(":")[0])
             lemma = analysis.split("+")[0]
