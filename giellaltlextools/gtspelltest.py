@@ -6,6 +6,7 @@ import sys
 import tempfile
 from argparse import ArgumentParser
 from subprocess import Popen
+from termcolor import colored, cprint
 
 from . import __version__
 from .lexc import scrapelemmas
@@ -52,7 +53,8 @@ def main():
     elif "hfst-ospell" in options.runnerfilename:
         spellargs = [options.runnerfilename, "-S", options.zhfstfilename]
     else:
-        print(f"fail - unknown runner {options.runnerfilename}")
+        print(colored("fail", "red"),
+              f"- unknown runner {options.runnerfilename}")
         sys.exit(1)
     skipforms = None
     if options.acceptable_forms:
@@ -74,7 +76,7 @@ def main():
                                  stderr=subprocess.PIPE,
                                  check=True, timeout=options.time_out)
     except subprocess.TimeoutExpired:
-        print("Warning: lemma checking timed out")
+        print(colored("Warning:", "yellow"), "lemma checking timed out")
         sys.exit(77)
     skipping = True
     if options.verbose:
@@ -104,7 +106,8 @@ def main():
             print("too many fails, bailing to save time...")
             break
     if lines == 0:
-        print(f"SKIP: could not find lemmas in {options.lexcfilenames}")
+        print(colored("SKIP:", "cyan"),
+              f"could not find lemmas in {options.lexcfilenames}")
         sys.exit(77)
     coverage = (1.0 - (float(oovs) / float(lines))) * 100.0
     if options.verbose:
@@ -112,16 +115,19 @@ def main():
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % accepted")
     if coverage < options.threshold:
-        print("FAIL: too many lemmas weren't generating!",
-              f"{coverage} < {options.threshold}")
-        print(f"see {logfile.name} for details ({oovs} ungenerated strings)")
+        print(colored("FAIL:", "red"), f"{oovs} lemmas failed!",
+              f"({coverage} % < {options.threshold} %)")
+        print("fix lemmas in follwoing files please:",
+              colored(options.lexcfilenames, "cyan"))
+        print("see", colored(logfile.name, "magenta"), "for details")
         if options.editor:
             Popen([options.editor, logfile.name])
         sys.exit(1)
     else:
-        print(f"PASS: {len(lemmas)} lemmas {coverage} % accepted")
+        print(colored("PASS:", "green"),
+              f"{len(lemmas)} lemmas {coverage} % accepted")
         if coverage < 100:
-            print(f"see {logfile.name} for remaining lemmas")
+            print("see", colored(logfile.name, "magenta"), "for details")
 
 
 if __name__ == "__main__":
