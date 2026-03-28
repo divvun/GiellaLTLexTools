@@ -54,6 +54,16 @@ def unhidelexcescapes(s: str, unescape=True) -> str:
     return s
 
 
+def strippercents(s: str) -> str:
+    """Remove percent escaping from lexc string.
+
+    This is irreversible and prepares lexc string for end use."""
+    s = s.replace("%%", "§PERCENT§")
+    s = s.replace("%", "")
+    s = s.replace("§PERCENT§", "%")
+    return s
+
+
 def killflagdiacritics(s: str) -> str:
     """Remove flag diacritics from the string."""
     if "@" in s:
@@ -101,6 +111,7 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
         if ":" in lexcline:
             analysis = unhidelexcescapes(lexcline.split(":")[0])
             lemma = analysis.split("+")[0]
+            lemma = strippercents(lemma)
             if not lemma or lemma.strip() == "":
                 continue
             if debug:
@@ -109,6 +120,7 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
         else:
             idstringy = unhidelexcescapes(lexcline.split()[0])
             lemma = idstringy.split("+")[0]
+            lemma = strippercents(lemma)
             if not lemma or lemma.strip() == "":
                 continue
             if debug:
