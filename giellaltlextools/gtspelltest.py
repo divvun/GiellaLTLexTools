@@ -6,6 +6,7 @@ import sys
 import tempfile
 from argparse import ArgumentParser
 from subprocess import Popen
+
 from termcolor import colored, cprint
 
 from . import __version__
@@ -28,7 +29,7 @@ def main():
                       required=True)
     argp.add_argument("-T", "--threshold", type=int,
                       help="required percentage of succesful generations",
-                      default=99)
+                      default=100)
     argp.add_argument("-d", "--debug", action="store_true", default=False,
                       help="prints debugging outputs")
     argp.add_argument("-v", "--verbose", action="store_true", default=False,
@@ -115,7 +116,7 @@ def main():
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % accepted")
     if coverage < options.threshold:
-        print(colored("FAIL:", "red"), f"{oovs} lemmas failed!",
+        print(colored("FAIL:", "ed"), f"{oovs} lemmas failed!",
               f"({coverage} % < {options.threshold} %)")
         print("fix lemmas in follwoing files please:",
               colored(options.lexcfilenames, "cyan"))
@@ -127,6 +128,8 @@ def main():
         print(colored("PASS:", "green"),
               f"{len(lemmas)} lemmas {coverage} % accepted")
         if coverage < 100:
+            print("fix lemmas in follwoing files please:",
+                  colored(options.lexcfilenames, "cyan"))
             print("see", colored(logfile.name, "magenta"), "for details")
 
 
