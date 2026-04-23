@@ -102,7 +102,7 @@ def scrapelemmas(f: IO[str], exclusions: list[str], debug=False) -> set[str]:
             continue
         if ";" not in lexcline:
             continue
-        if "+Err" in lexcline and not "+Err/Orth" in lexcline:
+        if "+Err" in lexcline and "+Err/Orth" not in lexcline:
             continue
         if len(lexcline.split()) <= 2:
             continue
