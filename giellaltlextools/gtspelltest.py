@@ -122,6 +122,7 @@ def main():
               colored(options.lexcfilenames, "cyan"))
         print("see", colored(logfile.name, "magenta"), "for details")
         if options.editor:
+            print(f"Running {options.editor} {logfile.name}...")
             Popen([options.editor, logfile.name])
         sys.exit(1)
     else:
