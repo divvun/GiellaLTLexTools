@@ -5,6 +5,7 @@ import re
 import sys
 from argparse import ArgumentParser
 from time import time
+from termcolor import colored
 
 from . import __version__
 
@@ -34,6 +35,10 @@ def main():
     prefixplustagre = r"[^+@#]*[A-Za-z0-9_-]\+"
     atflagattags = False
     atflagatre = r"@[^@]+@"
+    if options.verbose:
+        print("testing", colored(options.lexcfile.name, "magenta"),
+              "for potential missing +tags, tags+ and",
+              "@X.FLAG.DIACRITICS@")
     for line in options.lexcfile:
         lines += 1
         if not inmultichars and not inlexicons:
@@ -43,7 +48,8 @@ def main():
                 if "!" in rest:
                     rest = rest.split("!")[0].strip()
                 if rest != "":
-                    print(f"trailing rubbish after multichar syms: {rest}")
+                    print(colored("FAIL: ", "red"),
+                          f"trailing rubbish after multichar syms: {rest}")
                     failcount += 1
             elif line.startswith("Alphabets"):
                 inmultichars = True
@@ -51,10 +57,12 @@ def main():
                 if "!" in rest:
                     rest = rest.split("!")[0].strip()
                 if rest != "":
-                    print(f"trailing rubbish after alphabets: {rest}")
+                    print(colored("FAIL: ", "red"),
+                          f"trailing rubbish after alphabets: {rest}")
                     failcount += 1
             elif line.startswith("LEXICON"):
-                print(f"found lexicons before multichars: {line.strip()}")
+                print(colored("FAIL: ", "red"),
+                      f"found lexicons before multichars: {line.strip()}")
                 failcount += 1
                 inlexicons = True
             else:
@@ -63,6 +71,10 @@ def main():
             if line.startswith("LEXICON "):
                 inmultichars = False
                 inlexicons = True
+                if options.verbose:
+                    print("Found following alphabets:\n",
+                          ", ".join(declaredmultichars))
+                    print("Reading lexicons now...")
                 continue
             if "!" in line:
                 line = line.replace("%!", "§EXCLAMATION§")
@@ -103,7 +115,9 @@ def main():
                     line = line.replace("§MORETHAN§", "%>")
                 line = line.replace("%;", "§SEMICOLON§")
                 if line.count(";") > 1:
-                    print(f"too many semicolons on line {lines}:\n{line}")
+                    print(colored("FAIL: ", "red"),
+                          f"too many semicolons on line {lines}:\n",
+                          colored(line, "cyan"))
                     failcount += 1
                     continue
                 line = line.replace("§SEMICOLON§", "%;")
@@ -119,10 +133,14 @@ def main():
                             pairstring = fields[i-2]
                         if i >= 3:
                             if line.startswith("LEXICON "):
-                                print("entries on LEXICON line is not "
-                                      f"supported:\n{line}")
+                                print(colored("FAIL:", "red"),
+                                      "entries on LEXICON line is not "
+                                      "supported:\n",
+                                      colored({line}, "cyan"))
                             else:
-                                print(f"too many spaces? parsing:\n{line}")
+                                print(colored("FAIL:", "red"),
+                                      "too many spaces? parsing:\n",
+                                      colored(line, "cyan"))
                                 failcount += 1
                 if pairstring:
                     if ":" in pairstring:
@@ -142,49 +160,69 @@ def main():
                             susprefix.append([tag])
                     if sussufix and plussuffixtags:
                         if not prefixplustags:
-                            print(f"{sussufix} seem(s) like a multichar "
+                            print(colored("FAIL:", "red"),
+                                  f"{sussufix} seem(s) like a multichar "
                                   "suffix tag but is missing from the "
                                   "Multichar_Symbols section "
-                                  f"on line {lines}:\n{line}")
+                                  f"on line {lines}:\n",
+                                  colored(line, "cyan"))
                             failcount += 1
                         elif susprefix:
-                            print(f"{sussufix} or {susprefix} seem like "
+                            print(colored("FAIL:", "red"),
+                                  f"{sussufix} or {susprefix} seem like "
                                   "potential multichars (suffixes or prefixes?)"
                                   " but are missing from "
                                   "Multichar_Symbols section "
-                                  f"on line {lines}:\n{line}")
+                                  f"on line {lines}:\n",
+                                  colored(line, "cyan"))
                             failcount += 1
                     elif susprefix and prefixplustags:
                         if not plussuffixtags:
-                            print(f"{susprefix} seem(s) like a multichar "
+                            print(colored("FAIL:", "red"),
+                                  f"{susprefix} seem(s) like a multichar "
                                   "prefix tag but is missing from the "
                                   "Multichar_Symbols section "
-                                  f"on line {lines}:\n{line}")
+                                  f"on line {lines}:\n",
+                                  colored(line, "cyan"))
                             failcount += 1
                         elif sussufix:
-                            print(f"{susprefix} seem(s) like a multichar "
+                            print(colored("FAIL:", "red"),
+                                  f"{susprefix} seem(s) like a multichar "
                                   "prefix tag but is missing from the "
                                   "Multichar_Symbols section "
-                                  f"on line {lines}:\n{line}")
+                                  f"on line {lines}:\n",
+                                  colored(line, "cyan"))
                             failcount += 1
                     for flag in re.findall(atflagatre, deep):
                         if flag not in declaredmultichars:
-                            print(f"{flag} seems like a multichar "
+                            print(colored("FAIL:", "red"),
+                                  f"{flag} seems like a multichar "
                                   "flag diacritic but is missing from the "
                                   "Multichar_Symbols section "
-                                  f"on line {lines}:\n{line}")
+                                  f"on line {lines}:\n",
+                                  colored(line, "cyan"))
                             failcount += 1
+                        if not atflagattags:
+                            print("found no flag diacritics in alphabets!")
                 if len(fields) <= 2:
                     # continuation class and ;
                     continue
     end = time()
-    print(f"Used {end - start} times")
+    if options.verbose:
+        print(f"Used {end - start} times")
     if lines == 0:
-        print(f"SKIP: could not find multichars in {options.lexcfile.name}")
+        print(colored("SKIP:", "cyan"),
+              "could not find multichars in",
+              colored(options.lexcfile.name, "magenta"))
         sys.exit(77)
     if failcount > 0:
-        print("FAIL: there were problems (see above).")
+        print(colored("FAIL:", "red"), "there were problems (see above).")
+        print("Fix multichars in lexc file:",
+              colored(options.lexcfile.name, "magenta"))
         sys.exit(1)
+    else:
+        print(colored("PASS:", "green"))
+        sys.exit(0)
 
 
 if __name__ == "__main__":
