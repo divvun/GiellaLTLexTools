@@ -45,6 +45,14 @@ def main():
                 if rest != "":
                     print(f"trailing rubbish after multichar syms: {rest}")
                     failcount += 1
+            elif line.startswith("Alphabets"):
+                inmultichars = True
+                rest = line[len("Alphabets") + 1:].strip()
+                if "!" in rest:
+                    rest = rest.split("!")[0].strip()
+                if rest != "":
+                    print(f"trailing rubbish after alphabets: {rest}")
+                    failcount += 1
             elif line.startswith("LEXICON"):
                 print(f"found lexicons before multichars: {line.strip()}")
                 failcount += 1
