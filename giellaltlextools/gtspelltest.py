@@ -61,6 +61,10 @@ def main():
     if options.acceptable_forms:
         skipforms = [l.strip() for l in options.acceptable_forms.readlines()]
     lemmas = set()
+    if options.exclude:
+        options.exclude.append(r"\+Use/-Spell")
+    else:
+        options.exclude = [r"\+Use/-Spell"]
     for lexcfilename in options.lexcfilenames:
         with open(lexcfilename, encoding="utf-8") as lexcfile:
             more = scrapelemmas(lexcfile, options.exclude, options.debug)
@@ -116,7 +120,7 @@ def main():
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % accepted")
     if coverage < options.threshold:
-        print(colored("FAIL:", "ed"), f"{oovs} lemmas failed!",
+        print(colored("FAIL:", "red"), f"{oovs} lemmas failed!",
               f"({coverage} % < {options.threshold} %)")
         print("fix lemmas in follwoing files please:",
               colored(options.lexcfilenames, "cyan"))
