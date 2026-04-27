@@ -4,6 +4,7 @@
 import subprocess
 import sys
 import tempfile
+import re
 from argparse import ArgumentParser
 from subprocess import Popen
 
@@ -11,6 +12,26 @@ from termcolor import colored, cprint
 
 from . import __version__
 from .lexc import scrapelemmas
+
+
+DEFAULT_EXCLUSIONS = [
+    r"\+Use/-Spell",
+    r"\+Use/MT",
+    r"\+Use/Marg",
+    r"\+Use/TTS",
+    r"\+Use/PMatch",
+    r"\+Use/GC",
+]
+
+
+def parse_input_lemma(line: str) -> str:
+    """Extract full input lemma from a divvunspell/hfst-ospell output line."""
+    match = re.match(r"^Input:\s*(.*?)\s+\[[^\]]+\]\s*$", line)
+    if match:
+        return match.group(1)
+    if "Input:" in line:
+        return line.split("Input:", maxsplit=1)[1].strip()
+    return ""
 
 
 def main():
@@ -62,9 +83,9 @@ def main():
         skipforms = [l.strip() for l in options.acceptable_forms.readlines()]
     lemmas = set()
     if options.exclude:
-        options.exclude.append(r"\+Use/-Spell")
+        options.exclude.extend(DEFAULT_EXCLUSIONS)
     else:
-        options.exclude = [r"\+Use/-Spell"]
+        options.exclude = DEFAULT_EXCLUSIONS.copy()
     for lexcfilename in options.lexcfilenames:
         with open(lexcfilename, encoding="utf-8") as lexcfile:
             more = scrapelemmas(lexcfile, options.exclude, options.debug)
@@ -88,7 +109,7 @@ def main():
         print("processing done.")
     for line in results.stdout.decode("utf-8").strip().split("\n"):
         if "Input:" in line:
-            lemma = line.split()[1]
+            lemma = parse_input_lemma(line)
             if lemma in {"", "#", "#;"}:
                 skipping = True
             elif skipforms and lemma in skipforms:

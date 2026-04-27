@@ -19,7 +19,7 @@
 
 __all__ = []
 
-__version__ = "0.6.5"
+__version__ = "0.6.6"
 __author__ = "Flammie A Pirinen"
 __author_email__ = "flammie@iki.fi"
 
