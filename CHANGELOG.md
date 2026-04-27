@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.6.7 - 2026-04-27
+
+### Changed
+
+- Extended default spelltest exclusions to also remove entries tagged with `+CmpNP/Pref`, `+CmpNP/Suff`, and `+CmpNP/Only`.
+
 ## 0.6.6 - 2026-04-27
 
 ### Fixed

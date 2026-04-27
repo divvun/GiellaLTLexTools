@@ -21,6 +21,9 @@ DEFAULT_EXCLUSIONS = [
     r"\+Use/TTS",
     r"\+Use/PMatch",
     r"\+Use/GC",
+    r"\+CmpNP/Pref",
+    r"\+CmpNP/Suff",
+    r"\+CmpNP/Only",
 ]
 
 
