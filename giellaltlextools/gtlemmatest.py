@@ -85,10 +85,12 @@ def dostuff(options: Namespace, logfile: TextIO):
     if options.verbose:
         print(f"used {end-start} times for FSA / subprocess startup")
     start = time()
+    if "exclusions" in configuration[options.pos]:
+        exclusions = configuration[options.pos]["exclusions"]
+    else:
+        exclusions = None
     with open(lexcfilename, encoding="UTF-8") as lexcfile:
-        lemmas = scrapelemmas(lexcfile,
-                          configuration[options.pos]["exclusions"],
-                          options.debug)
+        lemmas = scrapelemmas(lexcfile, exclusions, options.debug)
     end = time()
     if options.verbose:
         print(f"used {end-start} times for lemma scraping")
@@ -169,6 +171,10 @@ def dostuff(options: Namespace, logfile: TextIO):
         print("Lemma statistics:")
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % success")
+    print("## Lemma statistics:", file=logfile)
+    print(f"* {len(lemmas)} lemmas", file=logfile)
+    print(f"* {coverage} % success", file=logfile)
+
     if coverage < options.threshold:
         print(colored("FAIL:", "red"),
               f"{oovs} ungenerated strings, {misses} wrong lemmas",
