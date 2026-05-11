@@ -65,7 +65,6 @@ def dostuff(options: Namespace, logfile: TextIO):
     print(f"# Lemma-tests for *{options.pos}* in `{basename(lexcfilename)}`",
           file=logfile)
     print(file=logfile)
-    print(f"Settings used:\n\n```json\n{configuration}\n```", file=logfile)
     skiplemmas = None
     if "acceptable_lemmas_file" in configuration[options.pos]:
         with open(configuration[options.pos]["acceptable_lemmas_file"],
@@ -174,6 +173,7 @@ def dostuff(options: Namespace, logfile: TextIO):
     print("## Lemma statistics:", file=logfile)
     print(f"* {len(lemmas)} lemmas", file=logfile)
     print(f"* {coverage} % success", file=logfile)
+    print(f"## Settings used:\n\n```json\n{configuration}\n```", file=logfile)
 
     if coverage < options.threshold:
         print(colored("FAIL:", "red"),
