@@ -18,6 +18,15 @@ from .hfstpope import load_hfst_pope
 from .lexc import scrapelemmas
 
 
+def prettyprint_json(config):
+    """Pretty print JSON."""
+    for pos in ["verbs", "nouns", "adjectives", "propernouns"]:
+        config[pos]["lexcfile"] = ".../" + basename(config[pos]["lexcfile"])
+    config["generator"] = ".../" + basename(config["generator"])
+    config["analyser"] = ".../" + basename(config["analyser"])
+    return json.dumps(config, indent=4, sort_keys=True)
+
+
 def main():
     """CLI for GiellaLT lemma generation tests."""
     argp = ArgumentParser()
@@ -62,7 +71,7 @@ def dostuff(options: Namespace, logfile: TextIO):
     """Run lemma generation tests."""
     configuration = json.load(options.config)
     lexcfilename = configuration[options.pos]["lexcfile"]
-    print(f"# Lemma-tests for *{options.pos}* in `{basename(lexcfilename)}`",
+    print(f"# Lemma-tests for *{options.pos}* in ...`{basename(lexcfilename)}`",
           file=logfile)
     print(file=logfile)
     skiplemmas = None
@@ -121,7 +130,8 @@ def dostuff(options: Namespace, logfile: TextIO):
                     if generation[0] == lemma:
                         matched = True
                     else:
-                        mismatches.add(f"* `{lemma}{tagstring}` => {generation}")
+                        mismatches.add(f"* `{lemma}{tagstring}` "
+                                       f"=> `{generation[0]}`")
         lines += 1
         if empty or not matched:
             print(f"\n**{lemma}** failures:\n", file=logfile)
@@ -141,11 +151,11 @@ def dostuff(options: Namespace, logfile: TextIO):
                 for analysis in analyses:
                     uniques.add(analysis[0])
                 for analysis in uniques:
-                    print(f"  * {analysis}", file=logfile)
+                    print(f"  * `{analysis}`", file=logfile)
                     if options.verbose:
                         print(f"\t{analysis}")
             else:
-                print(f"\t{lemma} has no analyses either", file=logfile)
+                print(f"* `{lemma}` has no analyses either", file=logfile)
         if oovs >= options.oov_limit:
             print("too many fails, bailing to save time...")
             print("**FINISHED PREMATURELY HERE DUE TO too many errors**:",
@@ -170,10 +180,11 @@ def dostuff(options: Namespace, logfile: TextIO):
         print("Lemma statistics:")
         print(f"\t{len(lemmas)} lemmas")
         print(f"\t{coverage} % success")
-    print("## Lemma statistics:", file=logfile)
+    print("\n## Lemma statistics", file=logfile)
     print(f"* {len(lemmas)} lemmas", file=logfile)
     print(f"* {coverage} % success", file=logfile)
-    print(f"## Settings used:\n\n```json\n{configuration}\n```", file=logfile)
+    prettyconfig = prettyprint_json(configuration)
+    print(f"\n## Settings used\n\n```json\n{prettyconfig}\n```", file=logfile)
 
     if coverage < options.threshold:
         print(colored("FAIL:", "red"),
