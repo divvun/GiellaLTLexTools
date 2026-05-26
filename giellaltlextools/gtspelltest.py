@@ -153,7 +153,7 @@ def dostuff(options: Namespace, logfile: TextIO):
             break
     if lines == 0:
         print(colored("SKIP:", "cyan"),
-              f"could not find lemmas in {configuration["lexcfiles"]}")
+              f"could not find lemmas in {configuration['lexcfiles']}")
         sys.exit(77)
     coverage = (1.0 - (float(oovs) / float(lines))) * 100.0
     if options.verbose:
