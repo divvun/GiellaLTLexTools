@@ -63,26 +63,40 @@ def dostuff(options: Namespace, logfile: TextIO):
     configuration = json.load(options.config)
     lexcfilename = configuration[options.pos]["lexcfile"]
     print(f"# Paradigm tests for *{options.pos}* in "
-          f"...`{basename(lexcfilename)}`")
+          f"...`{basename(lexcfilename)}`\n", file=logfile)
     if options.driver == "subprocess":
-        generator = load_hfst_pope(options.generatorfilename)
+        generator = load_hfst_pope(configuration["generator"])
     elif options.driver == "pyhfst":
-        generator = load_hfst(options.generatorfilename)
+        generator = load_hfst(configuration["generator"])
     else:
         print(f"unusable driver {options.driver}")
         sys.exit(2)
-    if "paradigmfile" in configuration["pos"]:
-        with open(configuration["pos"]["paradigmfile"], encoding="utf-8") as \
+    if "paradigmfile" in configuration[options.pos]:
+        with open(configuration[options.pos]["paradigmfile"], encoding="utf-8") as \
                   paradigmfile:
             paradigms = [l.strip() for l in paradigmfile.readlines() if
                          l.strip() != ""]
+    else:
+        print(colored("skip:", "cyan"),
+              f"paradigmfile missing for {options.pos}",
+              f"in {options.config.name}")
+        sys.exit(77)
     skipforms = None
-    if "exceptionfile" in configuration["pos"]:
-        with open(configuration["pos"]["exceptionfile"], encoding="utf-8") as \
+    if "exceptionfile" in configuration[options.pos]:
+        with open(configuration[options.pos]["exceptionfile"], encoding="utf-8") as \
                   exceptionfile:
             skipforms = [l.strip() for l in exceptionfile.readlines()]
-    skiptags = options.acceptable_tags
-    lemmas = scrapelemmas(options.lexcfile, None, options.debug)
+    skiptags = None
+    if "skiptags" in configuration[options.pos]:
+        skiptags = configuration[options.pos]
+    else:
+        skiptags =None
+    if "exclusions" in configuration[options.pos]:
+        exclusions = configuration[options.pos]["exclusions"]
+    else:
+        exclusions = None
+    with open(lexcfilename, encoding="utf-8") as lexcfile:
+        lemmas = scrapelemmas(lexcfile, exclusions, options.debug)
     lines = 0
     forms = 0
     oovs = 0
@@ -105,15 +119,17 @@ def dostuff(options: Namespace, logfile: TextIO):
                 if not ignoring:
                     if options.verbose:
                         print(f"{lemma}{paradigm} does not generate!")
-                    misses.append(f"  * `{lemma}{paradigm}` ?", file=logfile)
+                    misses.append(f"  * `{lemma}{paradigm}` ?")
                     oovs += 1
                     if oovs >= options.oov_limit:
                         print(f"FAILing fast after too many fails: {oovs}")
                         print("**Finished prematurely because too many fails**:",
                               oovs, file=logfile)
-                        print(misses, file=logfile)
+                        for miss in misses:
+                            print(miss, file=logfile)
                         print(f"see {logfile.name} for details")
                         if options.editor:
+                            print(f"running {options.editor} {logfile.name}:")
                             Popen([options.editor, logfile.name])
                         sys.exit(1)
             lines += 1
@@ -124,7 +140,8 @@ def dostuff(options: Namespace, logfile: TextIO):
                     print(f"\t{g}")
         if misses:
             print(f"* **{lemma}** failures:", file=logfile)
-            print(misses, file=logfile)
+            for miss in misses:
+                print(miss, file=logfile)
         now = time()
         if now - start > options.time_out:
             print(f"Bailing after timeout {now - start}")
@@ -132,7 +149,7 @@ def dostuff(options: Namespace, logfile: TextIO):
             timedout = True
             break
     if lines == 0:
-        print(f"SKIP: could not find lemmas in {options.lexcfile.name}")
+        print(f"SKIP: could not find lemmas in {lexcfilename}")
         sys.exit(77)
     coverage = (1.0 - (float(oovs) / float(lines))) * 100.0
     if options.verbose:
