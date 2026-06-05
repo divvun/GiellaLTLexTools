@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
 
-from giellaltlextools.hfst import load_hfst  # type: ignore
+from giellaltlextools.hfst import load_hfst
 
 
 @dataclass
@@ -42,10 +42,16 @@ class LexcEntry:
     def __str__(self) -> str:
         tags = "+".join(self.tags)
         return (
-            f"{self.stem.replace(' ', '% ')}{'+' if tags else ''}{tags}:"
-            f"{self.lower.replace(' ', '% ')} {self.contlex} ; "
+            f"{self.escape_lexc(self.stem)}{'+' if tags else ''}{tags}:"
+            f"{self.escape_lexc(self.lower)} {self.contlex} ; "
             f"! {self.filename} {self.parent_lexicon}"
         )
+
+    def escape_lexc(self, s):
+        """
+        Escape spaces and lexc special character 0
+        """
+        return re.sub(r"([ 0])", r"%\1", s)
 
 
 LEXC_LINE_RE = re.compile(
