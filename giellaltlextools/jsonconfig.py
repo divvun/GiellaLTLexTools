@@ -25,7 +25,7 @@ def prettyprint_json(config) -> str:
     if "lexcfiles" in config:
         for i, lexc in enumerate(config["lexcfiles"]):
             config["lexcfiles"][i] = ".../" + prettyprint_lexcfilename(lexc)
-    if "zhfstfiles" in config:
+    if "zhfstfile" in config:
         config["zhfstfile"] = ".../" + basename(config["zhfstfile"])
     return json.dumps(config, indent=4, sort_keys=True)
 
