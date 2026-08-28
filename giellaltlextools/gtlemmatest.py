@@ -15,16 +15,8 @@ from termcolor import colored, cprint
 from . import __version__
 from .hfst import load_hfst
 from .hfstpope import load_hfst_pope
+from .jsonconfig import prettyprint_json
 from .lexc import scrapelemmas
-
-
-def prettyprint_json(config):
-    """Pretty print JSON."""
-    for pos in ["verbs", "nouns", "adjectives", "propernouns"]:
-        config[pos]["lexcfile"] = ".../" + basename(config[pos]["lexcfile"])
-    config["generator"] = ".../" + basename(config["generator"])
-    config["analyser"] = ".../" + basename(config["analyser"])
-    return json.dumps(config, indent=4, sort_keys=True)
 
 
 def main():

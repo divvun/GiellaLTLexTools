@@ -14,6 +14,7 @@ from typing import TextIO
 from termcolor import colored, cprint
 
 from . import __version__
+from .jsonconfig import prettyprint_json
 from .lexc import scrapelemmas
 
 DEFAULT_EXCLUSIONS = [
@@ -28,14 +29,6 @@ DEFAULT_EXCLUSIONS = [
     r"\+CmpNP/Only",
 ]
 
-def prettyprint_json(config):
-    """Pretty-print a JSON config."""
-    prettyfiles = []
-    for lexcfilename in config["lexcfiles"]:
-        prettyfiles.append(".../" + basename(lexcfilename))
-    config["lexcfiles"] = prettyfiles
-    config["zhfstfile"] = ".../" + basename(config["zhfstfile"])
-    return json.dumps(config, indent=4, sort_keys=True)
 
 
 def parse_input_lemma(line: str) -> str:
