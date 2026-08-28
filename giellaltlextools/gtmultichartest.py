@@ -334,7 +334,7 @@ def dostuff(options: Namespace, logfile: TextIO):
         elif key == "otherlexcs":
             for lexcfilename in value:
                 with open(lexcfilename, encoding="UTF-8") as lexcfile:
-                    failcount = check_multichar_symbols(
+                    failcount += check_multichar_symbols(
                             lexcfile, declaredmultichars, options, logfile)
     end = time()
     if options.verbose:
