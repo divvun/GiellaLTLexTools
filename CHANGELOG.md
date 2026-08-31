@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- `gtlemmatest` and `gtspelltest` accept `-J/--json-file` to write a
+  machine-readable JSON report alongside the markdown log (`-L`). The JSON
+  carries per-suite statistics and structured per-lemma failures (no-generation
+  / wrong-generation / analyses for lemma tests; suggestions for speller
+  tests), so downstream tooling does not have to parse the markdown.
+
+### Changed
+
+- `gtlemmatest`: extracted the per-lemma checking into `generation_failures()`
+  / `report_analyses()` / `check_lemma()` helpers. No change to the markdown
+  output except that analyser readings are now listed in a stable order.
+
+### Fixed
+
+- `gtlemmatest`: the final FAIL/SUCCESS summaries printed the last lemma's
+  mismatch *set* instead of the wrong-lemma *count* (`{mismatches}` →
+  `{misses}`).
+
+### Tests
+
+- Added unit and integration tests for the lemma-test logic and the JSON
+  output.
+
 ## 0.6.7 - 2026-04-27
 
 ### Changed

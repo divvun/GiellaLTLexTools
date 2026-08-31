@@ -15,7 +15,7 @@ from termcolor import colored, cprint
 from . import __version__
 from .hfst import load_hfst
 from .hfstpope import load_hfst_pope
-from .jsonconfig import prettyprint_json
+from .jsonconfig import prettyprint_json, write_json_log
 from .lexc import scrapelemmas
 
 
@@ -48,6 +48,9 @@ def main():
     argp.add_argument("-L", "--log-file", type=FileType("w"),
                       dest="logfile", metavar="LOGFILE",
                       help="save permanent markdown log in LOGFILE")
+    argp.add_argument("-J", "--json-file", type=FileType("w"),
+                      dest="jsonfile", metavar="JSONFILE",
+                      help="save machine-readable JSON results in JSONFILE")
     options = argp.parse_args()
     if options.logfile:
         dostuff(options, options.logfile)
@@ -57,6 +60,65 @@ def main():
                                          mode="w+") as logfile:
             dostuff(options, logfile)
     print(colored("SUCCESS", "green"))
+
+
+def generation_failures(lemma, tags, generator):
+    """Look up one lemma for all its tags. Returns (no_generation,
+    wrong_generation, empty, matched)."""
+    no_generation = []
+    wrong_generation = []
+    matched = False
+    empty = True
+    for tag in tags:
+        generations = generator.lookup(lemma + tag)
+        if not generations:
+            no_generation.append(lemma + tag)
+            continue
+        empty = False
+        for surface, *_ in generations:
+            if surface == lemma:
+                matched = True
+            else:
+                wrong_generation.append(
+                    {"expected": lemma + tag, "got": surface})
+    return no_generation, wrong_generation, empty, matched
+
+
+def report_analyses(lemma, analyser, logfile, verbose):
+    """Write (and return) the analyser's readings for a failing lemma."""
+    analyses = sorted({analysis[0] for analysis in analyser.lookup(lemma)})
+    if analyses:
+        print(f"* `{lemma}` has following analyses:", file=logfile)
+        for analysis in analyses:
+            print(f"  * `{analysis}`", file=logfile)
+            if verbose:
+                print(f"\t{analysis}")
+    else:
+        print(f"* `{lemma}` has no analyses either", file=logfile)
+    return analyses
+
+
+def check_lemma(lemma, tags, generator, analyser, logfile, verbose):
+    """Test generation of one lemma. Writes the markdown failure block to
+    logfile and returns a failure record (dict) when it fails, else None. The
+    ``empty`` flag lets the caller keep the historical failure counting."""
+    no_generation, wrong_generation, empty, matched = generation_failures(
+        lemma, tags, generator)
+    if matched:
+        return None
+    print(f"\n**{lemma}** failures:\n", file=logfile)
+    for form in no_generation:
+        print(f"* `{form}` does not generate!", file=logfile)
+    for wrong in wrong_generation:
+        print(f"* `{wrong['expected']}` => `{wrong['got']}`", file=logfile)
+    analyses = report_analyses(lemma, analyser, logfile, verbose)
+    return {
+        "lemma": lemma,
+        "no_generation": no_generation,
+        "wrong_generation": wrong_generation,
+        "analyses": analyses,
+        "empty": empty,
+    }
 
 
 def dostuff(options: Namespace, logfile: TextIO):
@@ -101,61 +163,29 @@ def dostuff(options: Namespace, logfile: TextIO):
     lines = 0
     oovs = 0
     misses = 0
+    json_failures = []
+    tags = configuration[options.pos]["lemmatags"]
     start = time()
     timedout = False
+    truncated = False
     for lemma in lemmas:
         if lemma in {"", "#", "#;"}:
             continue
         if skiplemmas and lemma in skiplemmas:
             continue
-        empty = True
-        matched = False
-        mismatches = set()
-        ungenerated = set()
-        for tagstring in configuration[options.pos]["lemmatags"]:
-            if options.verbose:
-                print(f"trying {lemma}{tagstring}...")
-            generations = generator.lookup(lemma + tagstring)
-            if options.verbose:
-                print(f"got {len(generations)}")
-            if len(generations) == 0:
-                ungenerated.add(f"* `{lemma}{tagstring}` does not generate!")
-            else:
-                empty = False
-                for generation in generations:
-                    if generation[0] == lemma:
-                        matched = True
-                    else:
-                        mismatches.add(f"* `{lemma}{tagstring}` "
-                                       f"=> `{generation[0]}`")
         lines += 1
-        if empty or not matched:
-            print(f"\n**{lemma}** failures:\n", file=logfile)
-        if empty:
-            oovs += 1
-            for degenerate in ungenerated:
-                print(degenerate, file=logfile)
-        if not matched:
+        failure = check_lemma(lemma, tags, generator, analyser, logfile,
+                              options.verbose)
+        if failure is not None:
+            if failure.pop("empty"):
+                oovs += 1
             misses += 1
-            for mismatch in mismatches:
-                print(mismatch, file=logfile)
-        if empty or not matched:
-            analyses = analyser.lookup(lemma)
-            if len(analyses) > 0:
-                print(f"* `{lemma}` has following analyses:", file=logfile)
-                uniques = set()
-                for analysis in analyses:
-                    uniques.add(analysis[0])
-                for analysis in uniques:
-                    print(f"  * `{analysis}`", file=logfile)
-                    if options.verbose:
-                        print(f"\t{analysis}")
-            else:
-                print(f"* `{lemma}` has no analyses either", file=logfile)
+            json_failures.append(failure)
         if oovs >= options.oov_limit:
             print("too many fails, bailing to save time...")
             print("**FINISHED PREMATURELY HERE DUE TO too many errors**:",
                   oovs, file=logfile)
+            truncated = True
             break
         now = time()
         if now - start > options.time_out:
@@ -163,6 +193,7 @@ def dostuff(options: Namespace, logfile: TextIO):
             print("**FINISHED PREMATURELY HERE DUE TO TIMEOUT**:",
                   options.time_out, file=logfile)
             timedout = True
+            truncated = True
             break
     end = time()
     if lines == 0:
@@ -181,6 +212,20 @@ def dostuff(options: Namespace, logfile: TextIO):
     print(f"* {coverage} % success", file=logfile)
     prettyconfig = prettyprint_json(configuration)
     print(f"\n## Settings used\n\n```json\n{prettyconfig}\n```", file=logfile)
+    if options.jsonfile:
+        write_json_log(options.jsonfile, {
+            "pos": options.pos,
+            "lexc": basename(lexcfilename),
+            "lemmas": len(lemmas),
+            "tested": lines,
+            "ungenerated": oovs,
+            "mismatched": misses,
+            "success_pct": coverage,
+            "threshold": options.threshold,
+            "truncated": truncated,
+            "failures": json_failures,
+            "settings": json.loads(prettyconfig),
+        })
 
     if coverage < options.threshold:
         print(colored("FAIL:", "red"),
@@ -195,7 +240,7 @@ def dostuff(options: Namespace, logfile: TextIO):
     else:
         if timedout and failures > 0:
             print(colored("FAIL:", "red"), "timed out with ungenerated lemmas")
-            print(f"{oovs} ungenerated strings, {mismatches} wrong lemmas")
+            print(f"{oovs} ungenerated strings, {misses} wrong lemmas")
             print(f"see {logfile.name} for details")
             if options.editor:
                 print(f"Running: {options.editor} {logfile.name}")
@@ -207,7 +252,7 @@ def dostuff(options: Namespace, logfile: TextIO):
             sys.exit(77)
         elif failures > 0:
             print(colored("SUCCESS:", "green"),
-                  f"{oovs} ungenerated strings, {mismatches} wrong lemmas",
+                  f"{oovs} ungenerated strings, {misses} wrong lemmas",
                   f"(accepted by -T: {coverage} >= {options.threshold})")
             if options.editor:
                 print(f"Running: {options.editor} {logfile.name}")
@@ -215,7 +260,7 @@ def dostuff(options: Namespace, logfile: TextIO):
                 sys.exit(0)
     if failures > 0:
         print(colored("SUCCESS:", "green"),
-              f"{oovs} ungenerated strings, {mismatches} wrong lemmas",
+              f"{oovs} ungenerated strings, {misses} wrong lemmas",
               f"{coverage} >= {options.threshold})"
               f"(accepted by -T: {coverage} >= {options.threshold})")
         if options.editor:

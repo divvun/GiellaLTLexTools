@@ -4,6 +4,13 @@
 
 import json
 from os.path import basename, dirname
+from typing import TextIO
+
+
+def write_json_log(jsonfile: TextIO, result: dict) -> None:
+    """Write machine-readable test results (see the -J/--json-file option)."""
+    json.dump(result, jsonfile, indent=2, ensure_ascii=False)
+    jsonfile.write("\n")
 
 
 def prettyprint_json(config) -> str:

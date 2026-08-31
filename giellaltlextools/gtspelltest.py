@@ -14,7 +14,7 @@ from typing import TextIO
 from termcolor import colored, cprint
 
 from . import __version__
-from .jsonconfig import prettyprint_json
+from .jsonconfig import prettyprint_json, write_json_log
 from .lexc import scrapelemmas
 
 DEFAULT_EXCLUSIONS = [
@@ -67,6 +67,9 @@ def main():
                       help="read configuration from CONFIGFILE", required=True)
     argp.add_argument("-L", "--logfile", type=FileType("w"), metavar="LOGFILE",
                       help="save permanent markdown log in LOGFILE")
+    argp.add_argument("-J", "--json-file", type=FileType("w"),
+                      dest="jsonfile", metavar="JSONFILE",
+                      help="save machine-readable JSON results in JSONFILE")
     options = argp.parse_args()
     if options.logfile:
         dostuff(options, options.logfile)
@@ -117,32 +120,37 @@ def dostuff(options: Namespace, logfile: TextIO):
         print(colored("Warning:", "yellow"), "lemma checking timed out")
         sys.exit(77)
     skipping = True
+    truncated = False
+    current = None
+    json_failures = []
     if options.verbose:
         print("processing done.")
     print("# Results for lemmatesting spell-checker\n", file=logfile)
     for line in results.stdout.decode("utf-8").strip().split("\n"):
         if "Input:" in line:
             lemma = parse_input_lemma(line)
-            if lemma in {"", "#", "#;"}:
-                skipping = True
-            elif skipforms and lemma in skipforms:
-                skipping = True
-            else:
-                skipping = False
+            current = None
+            skipping = (lemma in {"", "#", "#;"}) or bool(
+                skipforms and lemma in skipforms)
+            if not skipping:
                 lines += 1
         if skipping:
             continue
         if "[INCORRECT]" in line:
             oovs += 1
+            current = {"lemma": lemma, "suggestions": []}
+            json_failures.append(current)
             if options.verbose:
                 print(f"{lemma} is not accepted")
             print(f"\n**{lemma}** is missing. ", file=logfile)
             print("following suggestions:", file=logfile)
-        else:
-            if "Input:" not in line:
-                print(f"* {line}", file=logfile)
+        elif "Input:" not in line:
+            if current is not None:
+                current["suggestions"].append(line)
+            print(f"* {line}", file=logfile)
         if oovs >= options.oov_limit:
             print("too many fails, bailing to save time...")
+            truncated = True
             break
     if lines == 0:
         print(colored("SKIP:", "cyan"),
@@ -158,6 +166,17 @@ def dostuff(options: Namespace, logfile: TextIO):
     print(f"* {coverage} % accepted", file=logfile)
     prettyconfig = prettyprint_json(configuration)
     print(f"\n## Configuration:\n\n```json\n{prettyconfig}\n```", file=logfile)
+    if options.jsonfile:
+        write_json_log(options.jsonfile, {
+            "lemmas": len(lemmas),
+            "tested": lines,
+            "missing": oovs,
+            "success_pct": coverage,
+            "threshold": options.threshold,
+            "truncated": truncated,
+            "failures": json_failures,
+            "settings": json.loads(prettyconfig),
+        })
     if coverage < options.threshold:
         print(colored("FAIL:", "red"), f"{oovs} lemmas failed!",
               f"({coverage} % < {options.threshold} %)")
