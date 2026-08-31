@@ -62,6 +62,10 @@ def main():
 def dostuff(options: Namespace, logfile: TextIO):
     """Run lemma generation tests."""
     configuration = json.load(options.config)
+    if options.pos not in configuration:
+        print(colored("SKIP", "cyan"), f"{options.pos} not found in config "
+              f"at {options.config.name}")
+        sys.exit(77)
     lexcfilename = configuration[options.pos]["lexcfile"]
     print(f"# Lemma-tests for *{options.pos}* in ...`{basename(lexcfilename)}`",
           file=logfile)
