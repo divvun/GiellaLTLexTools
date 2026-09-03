@@ -79,7 +79,8 @@ def read_multichar_symbols(rootlexc: TextIO, options: Namespace,
                           f"**{rootlexcname}.{lines}**: `{line}`",
                           file=logfile)
                     failcount += 1
-                print(f"## `Multichar_Symbols` in `{rootlexcname}`\n")
+                print(f"## `Multichar_Symbols` in `{rootlexcname}`\n",
+                      file=logfile)
             elif line.startswith("Alphabets"):
                 inmultichars = True
                 rest = line[len("Alphabets") + 1:].strip()
