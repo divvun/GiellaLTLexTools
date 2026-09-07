@@ -59,8 +59,10 @@ def main():
                       help="prints some outputs")
     argp.add_argument("-Q", "--oov-limit", type=int, default=100_000,
                       help="stop trying after so many oovs")
-    argp.add_argument("-B", "--time-out", type=int, default=60,
-                      help="max time used to test lemmas")
+    argp.add_argument("-B", "--time-out", type=int, default=300,
+                      help="max wall-clock seconds for the speller run before "
+                      "the suite is skipped; a hang guard, not a routine "
+                      "cutoff")
     argp.add_argument("-E", "--editor", type=str,
                       help="open failures in EDITOR afterwards")
     argp.add_argument("-c", "--config", type=open, metavar="CONFIGFILE",

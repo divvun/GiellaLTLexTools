@@ -126,6 +126,8 @@ class TestJsonOutput(unittest.TestCase):
         self.assertEqual(data["lemmas"], 2)
         self.assertEqual(data["tested"], 2)
         self.assertEqual(data["ungenerated"], 1)   # gáffe
+        self.assertEqual(data["mismatched"], 0)
+        self.assertEqual(data["success_pct"], 50.0)  # 1 of 2 lemmas passed
         self.assertFalse(data["truncated"])
         self.assertEqual([f["lemma"] for f in data["failures"]], ["gáffe"])
         self.assertEqual(data["failures"][0]["no_generation"],
@@ -140,6 +142,26 @@ class TestJsonOutput(unittest.TestCase):
         data, _ = self._run(FakeFst({}), FakeFst({}),
                             ["a", "b", "c"], oov_limit=2, threshold=-10_000)
         self.assertTrue(data["truncated"])
+
+    def test_all_lemmas_ungenerated_is_zero_not_negative(self):
+        # A fully broken generator: every lemma fails to generate. success_pct
+        # must floor at 0, not go negative from counting each oov twice.
+        data, _ = self._run(FakeFst({}), FakeFst({}),
+                            ["a", "b", "c", "d"], threshold=-10_000)
+        self.assertEqual(data["ungenerated"], 4)
+        self.assertEqual(data["mismatched"], 0)
+        self.assertEqual(data["success_pct"], 0.0)
+
+    def test_wrong_generation_counts_as_mismatch_not_ungenerated(self):
+        generator = FakeFst({
+            "uure+N+Sg+Nom": [("uurre", 0.0)],
+            "uure+N+Pl+Nom": [("uurret", 0.0)],
+        })
+        data, _ = self._run(generator, FakeFst({}), ["uure"],
+                            threshold=-10_000)
+        self.assertEqual(data["ungenerated"], 0)
+        self.assertEqual(data["mismatched"], 1)
+        self.assertEqual(data["success_pct"], 0.0)
 
 
 if __name__ == "__main__":

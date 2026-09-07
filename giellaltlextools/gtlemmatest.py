@@ -34,8 +34,10 @@ def main():
                       help="prints some outputs")
     argp.add_argument("-Q", "--oov-limit", type=int, default=10_000,
                       help="stop trying after so many oovs")
-    argp.add_argument("-B", "--time-out", type=int, default=60,
-                      help="max time to use with lemmas")
+    argp.add_argument("-B", "--time-out", type=int, default=300,
+                      help="max wall-clock seconds for the generation loop; "
+                      "a hang guard, not a routine cutoff (use -Q to bail "
+                      "early on a broken generator)")
     argp.add_argument("-E", "--editor", type=str, metavar="EDITOR",
                       help="open failures in EDITOR afterwards")
     argp.add_argument("-D", "--driver", choices=["subprocess", "pyhfst"],
@@ -179,7 +181,8 @@ def dostuff(options: Namespace, logfile: TextIO):
         if failure is not None:
             if failure.pop("empty"):
                 oovs += 1
-            misses += 1
+            else:
+                misses += 1
             json_failures.append(failure)
         if oovs >= options.oov_limit:
             print("too many fails, bailing to save time...")

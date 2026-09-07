@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.11.0 - 2026-09-07
+
+### Changed
+
+- `gtlemmatest` / `gtspelltest`: `-B/--time-out` default raised from 60 to 300
+  seconds. It is a hang guard, not a routine cutoff — a 60 s limit was
+  truncating healthy large suites on loaded CI runners, publishing a partial
+  `success_pct` as if it were complete. Use `-Q/--oov-limit` for a
+  deterministic early bail on a broken generator.
+
+### Fixed
+
+- `gtlemmatest`: `success_pct` could go negative (down to `-100`) for a suite
+  where every tested lemma failed. Each no-generation lemma was counted once as
+  an oov and again as a miss, so `oovs + misses` exceeded the lemmas tested.
+  oovs and misses are now disjoint; the rate floors at 0.
+
 ## 0.10.0 - 2026-08-31
 
 ### Added
