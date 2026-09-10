@@ -15,7 +15,8 @@ def write_json_log(jsonfile: TextIO, result: dict) -> None:
 
 def prettyprint_json(config) -> str:
     """prettyprint json so it doesn't have local paths and is stable-ish."""
-    for pos in ["verbs", "nouns", "adjectives", "propernouns"]:
+    for pos in ["verbs", "nouns", "adjectives", "propernouns", "adverbs",
+                "adpositions"]:
         if pos in config:
             config[pos]["lexcfile"] = ".../" + \
                 prettyprint_lexcfilename(config[pos]["lexcfile"])
