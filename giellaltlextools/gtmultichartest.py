@@ -325,13 +325,12 @@ def dostuff(options: Namespace, logfile: TextIO):
         declaredmultichars = read_multichar_symbols(lexcroot, options, logfile,
                                                     failcount)
         failcount += check_multichar_symbols(lexcroot, declaredmultichars,
-                                            options, logfile)
+                                             options, logfile)
     for key, value in configuration.items():
-        if key in ["verbs", "nouns", "propernouns", "adjectives"]:
-            if "lexcfile" in value:
-                with open(value["lexcfile"], encoding="UTF-8") as lexcfile:
-                    failcount += check_multichar_symbols(
-                            lexcfile, declaredmultichars, options, logfile)
+        if "lexcfile" in value:
+            with open(value["lexcfile"], encoding="UTF-8") as lexcfile:
+                failcount += check_multichar_symbols(
+                        lexcfile, declaredmultichars, options, logfile)
         elif key == "otherlexcs":
             for lexcfilename in value:
                 with open(lexcfilename, encoding="UTF-8") as lexcfile:
